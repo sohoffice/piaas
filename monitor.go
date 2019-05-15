@@ -2,9 +2,9 @@ package piaas
 
 import (
 	"github.com/fsnotify/fsnotify"
+	"github.com/golang/glog"
 	"github.com/sohoffice/piaas/util"
 	"hash/fnv"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -58,12 +58,12 @@ func (rm *RecursiveMonitor) Watch() {
 
 func (rm *RecursiveMonitor) SubscribeToChanges(subscriber chan<- string) {
 	rm.changesObservers = append(rm.changesObservers, subscriber)
-	log.Printf("Added changes observer: %d.", len(rm.changesObservers))
+	glog.Infof("Added changes observer: %d.", len(rm.changesObservers))
 }
 
 func (rm *RecursiveMonitor) SubscribeToCollects(subscriber chan<- []string) {
 	rm.collectObservers = append(rm.collectObservers, subscriber)
-	log.Printf("Added collect observer: %d.", len(rm.collectObservers))
+	glog.Infof("Added collect observer: %d.", len(rm.collectObservers))
 }
 
 // add a directory to be monitored
@@ -79,7 +79,7 @@ func (rm *RecursiveMonitor) add(path string) {
 
 	err := rm.watcher.Add(path)
 	if err != nil {
-		log.Fatalf("Error adding path to RecursiveMonitor %s: %s", path, err)
+		glog.Fatalf("Error adding path to RecursiveMonitor %s: %s", path, err)
 	}
 }
 
@@ -95,7 +95,7 @@ func (rm *RecursiveMonitor) remove(path string) bool {
 		// if the path was monitored, remove it.
 		err := rm.watcher.Remove(path)
 		if err != nil {
-			log.Printf("Error removing path %s: %s", path, err)
+			glog.Infof("Error removing path %s: %s", path, err)
 		} else {
 			delete(rm.monitors, hash)
 			return true
@@ -120,7 +120,7 @@ func (rm *RecursiveMonitor) watchedDirectories() []string {
 
 // notify messages to all change observers
 func (rm *RecursiveMonitor) notify(msg string) {
-	log.Printf("notify %d observers: %s", len(rm.changesObservers), msg)
+	glog.Infof("notify %d observers: %s", len(rm.changesObservers), msg)
 	for _, sub := range rm.changesObservers {
 		sub <- msg
 	}
@@ -132,7 +132,7 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 		select {
 		case event, ok := <-rmPtr.watcher.Events:
 			if !ok {
-				log.Println("Watcher event is not ok.")
+				glog.Infof("Watcher event is not ok.")
 				return
 			}
 			filename := filepath.Clean(event.Name)
@@ -140,7 +140,7 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 			case fsnotify.Create:
 				info, err := os.Stat(filename)
 				if err != nil {
-					log.Printf("Error stating file %s: %s", filename, err)
+					glog.Infof("Error stating file %s: %s", filename, err)
 				}
 				if info.IsDir() { // a new directory was added
 					rmPtr.add(filename)
@@ -157,13 +157,13 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 			default:
 				rmPtr.changes <- filename
 			}
-			log.Println("event:", event)
+			glog.Infof("event: %s", event)
 		case err, ok := <-rmPtr.watcher.Errors:
 			if !ok {
-				log.Println("Watcher errors is not ok.")
+				glog.Errorf("Watcher errors is not ok.")
 				return
 			}
-			log.Println("error:", err)
+			glog.Errorf("error: %s", err)
 		}
 	}
 }
@@ -175,7 +175,7 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 		case "": // collect event
 			if rmPtr.accumulated == nil {
 				// this is very wrong, accumulated should have at least one msg.
-				log.Fatalln("Try to collect an empty accumulated list.")
+				glog.Fatalln("Try to collect an empty accumulated list.")
 			} else {
 				rmPtr.collects <- rmPtr.accumulated
 				rmPtr.accumulated = nil
@@ -184,7 +184,7 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 			if rmPtr.accumulated == nil {
 				rmPtr.accumulated = make([]string, 0)
 			}
-			log.Printf("Appending accumulated: %s, %s", rmPtr.accumulated, msg)
+			glog.Infof("Appending accumulated: %s, %s", rmPtr.accumulated, msg)
 			// rmPtr.accumulated = append(rmPtr.accumulated, msg)
 			rmPtr.accumulated = *rmPtr.accumulated.Add(msg)
 			rmPtr.debouncer.Event()
@@ -198,7 +198,7 @@ func NewRecursiveMonitor(start string) RecursiveMonitor {
 	monitors := make(map[uint32]Monitor)
 	watcherPtr, err := fsnotify.NewWatcher()
 	if err != nil {
-		log.Fatalf("Error creating watcherPtr: %s", err)
+		glog.Fatalf("Error creating watcherPtr: %s", err)
 	}
 	rm := RecursiveMonitor{
 		monitors:         monitors,
@@ -214,7 +214,7 @@ func NewRecursiveMonitor(start string) RecursiveMonitor {
 		return nil
 	})
 	if err != nil {
-		log.Fatalf("Can not walk the directory tree %s: %s.", start, err)
+		glog.Fatalf("Can not walk the directory tree %s: %s.", start, err)
 	}
 
 	return rm

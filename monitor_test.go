@@ -1,9 +1,9 @@
 package piaas
 
 import (
+	"github.com/golang/glog"
 	"github.com/sohoffice/piaas/util"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"testing"
@@ -49,7 +49,7 @@ func TestMonitorFileChanges(t *testing.T) {
 	go func() {
 		for {
 			msg := <-subscribe
-			log.Printf("Observed change: %s.", msg)
+			// log.Printf("Observed change: %s.", msg)
 			changes = *changes.Add(msg)
 		}
 	}()
@@ -97,15 +97,13 @@ func TestMonitorFileChanges(t *testing.T) {
 			ch <- true
 		}()
 
-		log.Printf("Event validating observed changes: %s", changes)
+		glog.Infof("Event validating observed changes: %s", changes)
 		if len(changes) != len(expectedChanges) {
 			t.Fatalf("Should receive %d changes, but %d was received.\n%s", len(expectedChanges), len(changes), changes)
 		}
 		if !expectedChanges.Compare(changes) {
 			t.Fatalf("Expecting: \n%s\nActual: \n%s", expectedChanges.ToString(), changes.ToString())
 		}
-
-		log.Print("\n\n\n")
 	}()
 	<-ch
 }

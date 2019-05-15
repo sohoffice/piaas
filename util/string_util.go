@@ -30,6 +30,15 @@ func (ar *StringArray) Compare(that StringArray) bool {
 	return true
 }
 
+// Reverse the string array
+func (ar *StringArray) Reverse() *StringArray {
+	var target StringArray
+	for i := range *ar {
+		target = append(target, (*ar)[len(*ar)-i-1])
+	}
+	return &target
+}
+
 func (ar StringArray) ToString() string {
 	var buf bytes.Buffer
 	for i, s := range ar {
