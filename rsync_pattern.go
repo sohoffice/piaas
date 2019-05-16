@@ -2,6 +2,7 @@ package piaas
 
 import (
 	"fmt"
+	"github.com/golang/glog"
 	"github.com/sohoffice/piaas/util"
 	"log"
 	"path/filepath"
@@ -9,6 +10,16 @@ import (
 	"strings"
 )
 
+// Implement basic rsync filter rules.
+//
+// Support the below notation
+//
+// - Exact, path element without special character. Ex: foo
+// - Anchored, path start with `/`. Ex: /foo
+// - Wildcard, path element that matches any character. Ex: foo*
+// - Double wildcards, path elements that matches any character including sub directories. Ex: foo/**
+// - Multi segments, path elements that span over one level in the hierarchy. Ex: foo/bar
+//
 type RsyncPattern struct {
 	// the original pattern
 	orig string
@@ -26,8 +37,10 @@ type RsyncPattern struct {
 	isFull bool
 }
 
+// Match a given path to make sure it matches this pattern or not.
+// You should not directly
 func (rp RsyncPattern) Match(path string) bool {
-	list := splitFilename(path, &util.StringArray{})
+	list := splitFilename(filepath.ToSlash(path), &util.StringArray{})
 	return rp.matchParts(list, 0)
 }
 
@@ -101,11 +114,11 @@ var fullTest = regexp.MustCompile(".*(/|\\*\\*)[^/]+")
 
 // Create a new RsyncPattern.
 func NewRsyncPattern(pat string) RsyncPattern {
-	bytes := []byte(filepath.ToSlash(pat))
+	bytes := []byte(pat)
 	for _, san := range sanitizers {
 		bytes = san(bytes)
 	}
-	sanitized := "^" + string(bytes) + "$"
+	sanitized := "(/|^)" + string(bytes) + "$"
 	reg, err := regexp.Compile(sanitized)
 	if err != nil {
 		log.Fatalf("Error compiling pattern %s: %s", string(bytes), err)
@@ -129,36 +142,35 @@ type RsyncPatterns struct {
 	// The base directory of the pattern.
 	// patterns will only contain path relative to the basedir.
 	basedir string
-
-	// the OS path separator == filepath.Separator
-	separator string
 }
 
-type RsyncMatcher struct {
-	path  string
-	parts []string
-}
-
-// Create a new RsyncMatcher
-func NewRsyncMatcher(path string) RsyncMatcher {
-
-	return RsyncMatcher{
-		path: path, parts: filepath.SplitList(path),
+func NewRsyncPatterns(basedir string, patterns ...RsyncPattern) RsyncPatterns {
+	return RsyncPatterns{
+		patterns: patterns,
+		basedir:  filepath.Clean(basedir),
 	}
 }
 
-// Build the convert rule to standardize the path separator to /
-func convertSeparatorRule(sep string) func(string) string {
-	if sep != "/" {
-		// convert the separator, if the separator is not /
-		return func(s string) string {
-			return strings.Replace(s, sep, "/", -1)
-		}
-	} else {
-		return func(s string) string {
-			return s
+// Working on a path under the basedir to see if it matches with any of the registered patterns.
+// False is returned if path wasn't under basedir.
+func (rp *RsyncPatterns) Match(path string) bool {
+	cleaned := filepath.Clean(path)
+	if !strings.HasPrefix(cleaned, rp.basedir) {
+		return false
+	}
+	rel, err := filepath.Rel(rp.basedir, path)
+	util.CheckError("Get relative path", err)
+	if strings.HasPrefix(rel, ".") {
+		// I believe this also means path is not under basedir.
+		glog.Errorf("Path not truly under basedir.\n- basedir: %s\n- path: %s\n- rel: %s", rp.basedir, path, rel)
+		return false
+	}
+	for _, pat := range rp.patterns {
+		if pat.Match(rel) {
+			return true
 		}
 	}
+	return false
 }
 
 // Split the filename into parts, each part represent one level in the directory hierarchy.
