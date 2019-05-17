@@ -162,7 +162,7 @@ func (rp *RsyncPatterns) Match(path string) bool {
 	util.CheckError("Get relative path", err)
 	if strings.HasPrefix(rel, ".") {
 		// I believe this also means path is not under basedir.
-		glog.Errorf("Path not truly under basedir.\n- basedir: %s\n- path: %s\n- rel: %s", rp.basedir, path, rel)
+		glog.Infof("Path not truly under basedir.\n- basedir: %s\n- path: %s\n- rel: %s", rp.basedir, path, rel)
 		return false
 	}
 	for _, pat := range rp.patterns {
@@ -178,7 +178,7 @@ func (rp *RsyncPatterns) Match(path string) bool {
 // The split is done using filepath.Split and be advised the separator will be part of the directory element.
 //
 // Ex: /foo/bar => ["/", "foo/", "bar"]
-// The "/" and "foo/" are directories and they all have a trailing slash to indicate this is a directory.
+// The "/" and "foo/" are directories so they will have a trailing slash to indicate this is a directory.
 func splitFilename(path string, splitted *util.StringArray) *util.StringArray {
 	if path == "" {
 		return splitted

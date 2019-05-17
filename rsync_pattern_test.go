@@ -1,9 +1,9 @@
 package piaas
 
 import (
+	"github.com/golang/glog"
 	"github.com/sohoffice/piaas/util"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"testing"
@@ -36,7 +36,7 @@ func TestRsyncMatcher(t *testing.T) {
 }
 
 func runRsyncMatcherTests(t *testing.T, pat RsyncPattern, positives []string, negatives []string) {
-	log.Printf("Run tests of %s.", pat.ToString())
+	glog.Infof("Run tests of %s.", pat.ToString())
 	for _, s := range positives {
 		if !pat.Match(s) {
 			t.Errorf("%s should match %s.", pat.ToString(), s)
