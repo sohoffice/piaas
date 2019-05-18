@@ -1,53 +1,9 @@
 package util
 
 import (
-	"bytes"
-	"fmt"
+	"github.com/sohoffice/piaas/stringarrays"
 	"sort"
 )
-
-type StringArray []string
-
-// Find the position of target in a string array
-func (ar *StringArray) IndexOf(target string) int {
-	for i, s := range *ar {
-		if s == target {
-			return i
-		}
-	}
-	return -1
-}
-
-func (ar *StringArray) Compare(that StringArray) bool {
-	if len(*ar) != len(that) {
-		return false
-	}
-	for i := 0; i < len(*ar); i++ {
-		if (*ar)[i] != (that)[i] {
-			return false
-		}
-	}
-	return true
-}
-
-// Reverse the string array
-func (ar *StringArray) Reverse() *StringArray {
-	var target StringArray
-	for i := range *ar {
-		target = append(target, (*ar)[len(*ar)-i-1])
-	}
-	return &target
-}
-
-func (ar StringArray) ToString() string {
-	var buf bytes.Buffer
-	for i, s := range ar {
-		buf.WriteString(fmt.Sprintf("%2d. ", i))
-		buf.WriteString(s)
-		buf.WriteRune('\n')
-	}
-	return buf.String()
-}
 
 type SortedStringArray []string
 
@@ -99,9 +55,7 @@ func (set StringSet) Add(s string) *StringSet {
 
 // Check whether 2 sets are the same.
 func (set *StringSet) Compare(that StringSet) bool {
-	ar1 := StringArray(*set)
-	ar2 := StringArray(that)
-	return ar1.Compare(ar2)
+	return stringarrays.Compare(*set, that)
 }
 
 func (set *StringSet) IndexOf(s string) int {
@@ -110,6 +64,5 @@ func (set *StringSet) IndexOf(s string) int {
 }
 
 func (set StringSet) ToString() string {
-	var ar = StringArray(set)
-	return ar.ToString()
+	return stringarrays.ToString(set)
 }

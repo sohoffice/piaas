@@ -1,54 +1,55 @@
 package util
 
 import (
+	"github.com/sohoffice/piaas/stringarrays"
 	"testing"
 )
 
 func TestStringArray_IndexOf(t *testing.T) {
-	ar := StringArray([]string{"aa", "bb", "cc"})
-	if ar.IndexOf("z") != -1 {
+	ar := []string{"aa", "bb", "cc"}
+	if stringarrays.IndexOf(ar, "z") != -1 {
 		t.Error("'z' should not be found.")
 	}
-	if ar.IndexOf("bb") != 1 {
+	if stringarrays.IndexOf(ar, "bb") != 1 {
 		t.Error("'bb' should be found at position 1.")
 	}
 }
 
 func TestStringArray_Compare(t *testing.T) {
-	var ar1 StringArray = []string{"a", "b"}
-	var ar2 StringArray = []string{"a", "b", "c"}
-	var ar3 StringArray = []string{"0", "a", "b"}
-	var ar4 StringArray = []string{"a", "b"}
-	if ar1.Compare(ar2) {
+	var ar1 = []string{"a", "b"}
+	var ar2 = []string{"a", "b", "c"}
+	var ar3 = []string{"0", "a", "b"}
+	var ar4 = []string{"a", "b"}
+	if stringarrays.Compare(ar1, ar2) {
 		t.Errorf("%s and %s should not be the same", ar1, ar2)
 	}
-	if ar1.Compare(ar3) {
+	if stringarrays.Compare(ar1, ar3) {
 		t.Errorf("%s and %s should not be the same", ar1, ar3)
 	}
-	if !ar1.Compare(ar4) {
+	if !stringarrays.Compare(ar1, ar4) {
 		t.Errorf("%s and %s should be the same", ar1, ar4)
 	}
-	if !ar1.Compare(ar1) {
+	if !stringarrays.Compare(ar1, ar1) {
 		t.Errorf("%s and %s should be the same", ar1, ar1)
 	}
 }
 
 func TestSortedStringArray_Insert(t *testing.T) {
 	var ar SortedStringArray = []string{"a", "c"}
-	ar1 := StringArray(*ar.Insert("0"))
-	if !ar1.Compare([]string{"0", "a", "c"}) {
+	ar1 := *ar.Insert("0")
+	if !stringarrays.Compare(ar1, []string{"0", "a", "c"}) {
 		t.Errorf("Not the same array.\nexpected: %s\nactual: %s", []string{"0", "a", "c"}, ar1)
 	}
-	ar2 := StringArray(*ar.Insert("b"))
-	if !ar2.Compare([]string{"a", "b", "c"}) {
+	ar2 := *ar.Insert("b")
+	if !stringarrays.Compare(ar2, []string{"a", "b", "c"}) {
 		t.Errorf("Not the same array.\nexpected: %s\nactual: %s", []string{"a", "b", "c"}, ar2)
 	}
-	ar3 := StringArray(*ar.Insert("z"))
-	if !ar3.Compare([]string{"a", "c", "z"}) {
+	ar3 := *ar.Insert("z")
+	if !stringarrays.Compare(ar3, []string{"a", "c", "z"}) {
 		t.Errorf("Not the same array.\nexpected: %s\nactual: %s", []string{"a", "c", "z"}, ar3)
 	}
-	ar4 := StringArray(*ar.Insert("c"))
-	if !ar4.Compare([]string{"a", "c", "c"}) {
+	ar4 := *ar.Insert("c")
+	if !stringarrays.Compare(ar4, []string{"a", "c", "c"}) {
 		t.Errorf("Not the same array.\nexpected: %s\nactual: %s", []string{"a", "c", "c"}, ar4)
 	}
 }

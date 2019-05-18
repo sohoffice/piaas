@@ -3,6 +3,7 @@ package piaas
 import (
 	"fmt"
 	"github.com/golang/glog"
+	"github.com/sohoffice/piaas/stringarrays"
 	"github.com/sohoffice/piaas/util"
 	"log"
 	"path/filepath"
@@ -40,12 +41,12 @@ type RsyncPattern struct {
 // Match a given path to make sure it matches this pattern or not.
 // You should not directly
 func (rp RsyncPattern) Match(path string) bool {
-	list := splitFilename(filepath.ToSlash(path), &util.StringArray{})
+	list := splitFilename(filepath.ToSlash(path), &[]string{})
 	return rp.matchParts(list, 0)
 }
 
 // Match the filename parts from the beginning to `endIndex`
-func (rp *RsyncPattern) matchParts(parts *util.StringArray, endIndex int) bool {
+func (rp *RsyncPattern) matchParts(parts *[]string, endIndex int) bool {
 	// extra precaution to make sure the endIndex do not grow beyond the parts length
 	if endIndex >= len(*parts) {
 		return false
@@ -179,7 +180,7 @@ func (rp *RsyncPatterns) Match(path string) bool {
 //
 // Ex: /foo/bar => ["/", "foo/", "bar"]
 // The "/" and "foo/" are directories so they will have a trailing slash to indicate this is a directory.
-func splitFilename(path string, splitted *util.StringArray) *util.StringArray {
+func splitFilename(path string, splitted *[]string) *[]string {
 	if path == "" {
 		return splitted
 	}
@@ -189,7 +190,7 @@ func splitFilename(path string, splitted *util.StringArray) *util.StringArray {
 		isDir = true
 	}
 	dir, file := filepath.Split(path)
-	var list util.StringArray
+	var list []string
 	if isDir {
 		list = append(*splitted, file+"/")
 	} else {
@@ -200,8 +201,8 @@ func splitFilename(path string, splitted *util.StringArray) *util.StringArray {
 		list = append(list, "/")
 	}
 	if dir == "" {
-		ar2 := util.StringArray(list)
-		return ar2.Reverse()
+		ar := stringarrays.Reverse(list)
+		return &ar
 	} else {
 		return splitFilename(dir, &list)
 	}

@@ -2,6 +2,7 @@ package piaas
 
 import (
 	"github.com/golang/glog"
+	"github.com/sohoffice/piaas/stringarrays"
 	"github.com/sohoffice/piaas/util"
 	"io/ioutil"
 	"os"
@@ -15,19 +16,19 @@ func TestNewRecursiveMonitor(t *testing.T) {
 	tempDir := mt.prepareTestDir()
 	defer os.RemoveAll(tempDir)
 
-	expectedMonitorNames := util.StringArray([]string{
+	expectedMonitorNames := []string{
 		tempDir, path.Join(tempDir, "foo"), path.Join(tempDir, "foo", "bar"),
 		path.Join(tempDir, "foo", "baz"), path.Join(tempDir, "foo1"), path.Join(tempDir, "to-be-deleted"),
 		path.Join(tempDir, "to-be-renamed-dir"),
-	})
+	}
 	monitors := NewRecursiveMonitor(tempDir)
 	if monitors.length() != len(expectedMonitorNames) {
 		t.Errorf("monitor number should be %d, but is %d.\nExpected:\n%s\nActual:\n%s", len(expectedMonitorNames), monitors.length(),
-			expectedMonitorNames.ToString(), util.StringArray(monitors.watchedDirectories()).ToString())
+			stringarrays.ToString(expectedMonitorNames), stringarrays.ToString(monitors.watchedDirectories()))
 	}
 
 	for _, monitoredPath := range monitors.watchedDirectories() {
-		if expectedMonitorNames.IndexOf(monitoredPath) == -1 {
+		if stringarrays.IndexOf(expectedMonitorNames, monitoredPath) == -1 {
 			t.Errorf("monitor path %s was not expected.", monitoredPath)
 		}
 	}

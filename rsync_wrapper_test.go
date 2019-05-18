@@ -2,7 +2,7 @@ package piaas
 
 import (
 	"fmt"
-	"github.com/sohoffice/piaas/util"
+	"github.com/sohoffice/piaas/stringarrays"
 	"testing"
 	"time"
 )
@@ -50,11 +50,11 @@ func TestRsyncWrapper_SyncFiles(t *testing.T) {
 		"/tmp/.piaasignore",
 		fmt.Sprintf("--include='*/' %s --exclude='*'", "--include='/d'"),
 		"foo@bar:/tmp/foo")
-	actual := util.StringArray(tester.commands)
-	expected := util.StringArray([]string{expected1, expected2})
+	actual := tester.commands
+	expected := []string{expected1, expected2}
 
-	if actual.Compare(expected) == false {
-		t.Errorf("Unexpected sync files commands:\nExpected:\n%s\nActual:\n%s", expected.ToString(), actual.ToString())
+	if stringarrays.Compare(actual, expected) == false {
+		t.Errorf("Unexpected sync files commands:\nExpected:\n%s\nActual:\n%s", stringarrays.ToString(expected), stringarrays.ToString(actual))
 	}
 }
 
