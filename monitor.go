@@ -17,7 +17,7 @@ type Monitor struct {
 type RecursiveMonitor struct {
 	// This channel publish collected changes.
 	// The changes will be published to CollectObservers.
-	collects chan []string
+	collectsCh chan []string
 
 	// The caller of RecursiveMonitor should use this to subscribe to collected changes.
 	collectObservers []chan<- []string
@@ -52,6 +52,8 @@ func (rm *RecursiveMonitor) Watch() {
 	rm.debouncer = util.NewDebouncer(1000, func() {
 		rm.changes <- ""
 	})
+	rm.collectsCh = make(chan []string)
+	go collectedHandler(rm)
 	go changesHandler(rm)
 	go fsnotifyHandler(rm)
 }
@@ -119,10 +121,17 @@ func (rm *RecursiveMonitor) watchedDirectories() []string {
 }
 
 // notify messages to all change observers
-func (rm *RecursiveMonitor) notify(msg string) {
-	glog.Infof("notify %d observers: %s", len(rm.changesObservers), msg)
+func (rm *RecursiveMonitor) notifyChanges(msg string) {
+	glog.Infof("notify %d changes observers: %s", len(rm.changesObservers), msg)
 	for _, sub := range rm.changesObservers {
 		sub <- msg
+	}
+}
+
+func (rm *RecursiveMonitor) notifyCollected(collected []string) {
+	glog.Infof("notify %d collect observers: %d", len(rm.collectObservers), len(collected))
+	for _, obs := range rm.collectObservers {
+		obs <- collected
 	}
 }
 
@@ -140,9 +149,8 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 			case fsnotify.Create:
 				info, err := os.Stat(filename)
 				if err != nil {
-					glog.Infof("Error stating file %s: %s", filename, err)
-				}
-				if info.IsDir() { // a new directory was added
+					glog.Infof("File error %s: %s", filename, err)
+				} else if info.IsDir() { // a new directory was added
 					rmPtr.add(filename)
 				}
 				rmPtr.changes <- filename
@@ -157,7 +165,7 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 			default:
 				rmPtr.changes <- filename
 			}
-			glog.Infof("event: %s", event)
+			glog.Infof("fsnotify event: %s", event)
 		case err, ok := <-rmPtr.watcher.Errors:
 			if !ok {
 				glog.Errorf("Watcher errors is not ok.")
@@ -173,11 +181,12 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 		msg := <-rmPtr.changes
 		switch msg {
 		case "": // collect event
+			glog.Infof("Collecting monitored changes.")
 			if rmPtr.accumulated == nil {
 				// this is very wrong, accumulated should have at least one msg.
 				glog.Fatalln("Try to collect an empty accumulated list.")
 			} else {
-				rmPtr.collects <- rmPtr.accumulated
+				rmPtr.collectsCh <- rmPtr.accumulated
 				rmPtr.accumulated = nil
 			}
 		default:
@@ -188,8 +197,16 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 			// rmPtr.accumulated = append(rmPtr.accumulated, msg)
 			rmPtr.accumulated = *rmPtr.accumulated.Add(msg)
 			rmPtr.debouncer.Event()
-			rmPtr.notify(msg)
+			rmPtr.notifyChanges(msg)
 		}
+	}
+}
+
+// Relay the collected message to observers.
+func collectedHandler(rmPtr *RecursiveMonitor) {
+	for {
+		collected := <-rmPtr.collectsCh
+		rmPtr.notifyCollected(collected)
 	}
 }
 

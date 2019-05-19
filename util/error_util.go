@@ -1,6 +1,10 @@
 package util
 
-import "github.com/golang/glog"
+import (
+	"fmt"
+	"github.com/golang/glog"
+	"os"
+)
 
 // check and log in error level
 func CheckError(tag string, err error) {
@@ -11,6 +15,7 @@ func CheckError(tag string, err error) {
 
 func CheckFatal(tag string, err error) {
 	if err != nil {
-		glog.Fatalf("%s error: %s", tag, err)
+		fmt.Fprintf(os.Stderr, "%s error: %s\n", tag, err)
+		os.Exit(1)
 	}
 }
