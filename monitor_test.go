@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"testing"
 	"time"
 )
@@ -58,7 +59,7 @@ func TestMonitorFileChanges(t *testing.T) {
 	// add myself to the distribution list of changes event
 	rm.SubscribeToChanges(subscribe)
 	// start watching
-	rm.Watch()
+	rm.Watch(1000)
 
 	// making changes
 	// creating new files
@@ -107,6 +108,34 @@ func TestMonitorFileChanges(t *testing.T) {
 		}
 	}()
 	<-ch
+}
+
+func TestMonitorCollectedChanges(t *testing.T) {
+	var mt = MonitorTest(*t)
+	tempDir := mt.prepareTestDir()
+	defer os.RemoveAll(tempDir)
+
+	rm := NewRecursiveMonitor(tempDir)
+	ch := make(chan []string)
+	go func() {
+		collected := <-ch
+		sort.Strings(collected)
+
+		if stringarrays.IndexOf(collected, path.Join(tempDir, "collect1")) == -1 || stringarrays.IndexOf(collected, path.Join(tempDir, "collect2")) == -1 ||
+			stringarrays.IndexOf(collected, path.Join(tempDir, "collect3")) == -1 {
+			glog.Errorln("Collected results:")
+			glog.Errorln(stringarrays.ToString(collected))
+			t.Errorf("Unexpected collect results: %s", stringarrays.ToString(collected))
+		}
+	}()
+	rm.SubscribeToCollects(ch)
+	rm.Watch(300)
+	// wait for 400 millis to make sure collected are checked.
+	<-time.After(time.Millisecond * 500)
+
+	mt.touchFile(path.Join(tempDir, "collect1"))
+	mt.touchFile(path.Join(tempDir, "collect2"))
+	mt.touchFile(path.Join(tempDir, "collect3"))
 }
 
 type MonitorTest testing.T

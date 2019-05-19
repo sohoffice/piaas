@@ -11,5 +11,6 @@ import (
 func TestMain(m *testing.M) {
 	defer glog.Flush()
 	flag.Parse()
+	// flag.Lookup("logtostderr").Value.Set("true")
 	os.Exit(m.Run())
 }

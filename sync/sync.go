@@ -63,7 +63,7 @@ func Execute(c *cli.Context) error {
 	// subscribe to file system changes
 	monitor.SubscribeToCollects(changes)
 	// starting watching for file system changes
-	monitor.Watch()
+	monitor.Watch(1000)
 	for {
 		changed := <-changes
 		// make sure the files are not excluded by the ignore rules.

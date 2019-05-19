@@ -48,8 +48,9 @@ type RecursiveMonitor struct {
 }
 
 // Start watching on all registered monitors, and manage the removal and addition of new directories.
-func (rm *RecursiveMonitor) Watch() {
-	rm.debouncer = util.NewDebouncer(1000, func() {
+func (rm *RecursiveMonitor) Watch(debounceTime int64) {
+	rm.debouncer = util.NewDebouncer(debounceTime, func(tag string) {
+		glog.Infof("Received debounce event: %s", tag)
 		rm.changes <- ""
 	})
 	rm.collectsCh = make(chan []string)
@@ -181,7 +182,7 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 		msg := <-rmPtr.changes
 		switch msg {
 		case "": // collect event
-			glog.Infof("Collecting monitored changes.")
+			glog.Infof("Collecting monitored changes: %s", rmPtr.accumulated)
 			if rmPtr.accumulated == nil {
 				// this is very wrong, accumulated should have at least one msg.
 				glog.Fatalln("Try to collect an empty accumulated list.")
@@ -196,7 +197,7 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 			glog.Infof("Appending accumulated: %s, %s", rmPtr.accumulated, msg)
 			// rmPtr.accumulated = append(rmPtr.accumulated, msg)
 			rmPtr.accumulated = *rmPtr.accumulated.Add(msg)
-			rmPtr.debouncer.Event()
+			rmPtr.debouncer.Event(msg)
 			rmPtr.notifyChanges(msg)
 		}
 	}
