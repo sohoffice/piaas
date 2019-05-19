@@ -6,6 +6,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/sohoffice/piaas/sync"
 	"github.com/urfave/cli"
+	"log"
 	"os"
 )
 
@@ -33,6 +34,7 @@ func main() {
 		},
 	}
 	if debug == true {
+		log.Println("Debug is on.")
 		flag.Parse()
 		flag.Lookup("logtostderr").Value.Set("true")
 	}

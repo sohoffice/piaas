@@ -145,10 +145,16 @@ type RsyncPatterns struct {
 	basedir string
 }
 
+// Create a new RsyncPatterns.
 func NewRsyncPatterns(basedir string, patterns ...RsyncPattern) RsyncPatterns {
+	var cleaned string
+	if len(basedir) > 0 {
+		cleaned = filepath.Clean(basedir)
+	}
+	glog.Infof("Rsync pattern basedir: %s", cleaned)
 	return RsyncPatterns{
 		patterns: patterns,
-		basedir:  filepath.Clean(basedir),
+		basedir:  cleaned,
 	}
 }
 
@@ -161,7 +167,7 @@ func (rp *RsyncPatterns) Match(path string) bool {
 	}
 	rel, err := filepath.Rel(rp.basedir, path)
 	util.CheckError("Get relative path", err)
-	if strings.HasPrefix(rel, ".") {
+	if strings.HasPrefix(rel, "./") || strings.HasPrefix(rel, "../") {
 		// I believe this also means path is not under basedir.
 		glog.Infof("Path not truly under basedir.\n- basedir: %s\n- path: %s\n- rel: %s", rp.basedir, path, rel)
 		return false

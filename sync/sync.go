@@ -1,12 +1,15 @@
 package sync
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/sohoffice/piaas"
 	"github.com/sohoffice/piaas/util"
 	"github.com/urfave/cli"
 	"log"
+	"os"
 	"path"
+	"strings"
 )
 
 // Prepare the sync module.
@@ -50,11 +53,14 @@ func Execute(c *cli.Context) error {
 	}
 	basedir := path.Clean(path.Dir("."))
 	log.Println("Basedir:", basedir)
-	log.Println("Rsync to:", syncTarget)
-	log.Println("Piaas ignore file:", prof.IgnoreFile)
+	log.Println("Sync to:", syncTarget)
+	log.Println("Ignore file: ", prof.IgnoreFile)
 
 	monitor := piaas.NewRecursiveMonitor(basedir)
-	ignore := piaas.NewRsyncPatterns(basedir)
+	ignore, err := readIgnoreFile(prof.IgnoreFile)
+	if err != nil {
+		return err
+	}
 	rsync := piaas.NewRsyncWrapper("rsync", basedir, syncTarget)
 	rsync.Start(func(s string) {
 		log.Println("Run:", s)
@@ -78,4 +84,25 @@ func Execute(c *cli.Context) error {
 			rsync.SyncFiles(filtered)
 		}
 	}
+}
+
+func readIgnoreFile(ignorefile string) (piaas.RsyncPatterns, error) {
+	f, err := os.Open(ignorefile)
+	if err != nil {
+		return piaas.RsyncPatterns{}, err
+	}
+	defer f.Close()
+
+	patterns := make([]piaas.RsyncPattern, 0)
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		cleaned := strings.Trim(line, " \t")
+		if len(cleaned) > 0 {
+			log.Printf("  | %s", cleaned)
+			patterns = append(patterns, piaas.NewRsyncPattern(cleaned))
+		}
+	}
+
+	return piaas.NewRsyncPatterns("", patterns...), nil
 }

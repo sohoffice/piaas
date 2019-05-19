@@ -1,2 +1,6 @@
 /.idea
 .git
+*___jb_tmp___
+*___jb_old___
+
+
