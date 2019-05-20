@@ -12,6 +12,8 @@ build:
 	cd main && GOOS=darwin GOARCH=amd64 $(GOBUILD) -o ../dist/darwin-amd64/$(BINARY_NAME) -v && cd ..
 	chmod a+x dist/darwin-amd64/$(BINARY_NAME)
 test:
+	$(GOTEST) -v ./... -args -logtostderr
+tests:
 	$(GOTEST) -v ./... -count=10 -args -logtostderr
 clean:
 	$(GOCLEAN)

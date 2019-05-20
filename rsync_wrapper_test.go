@@ -3,6 +3,7 @@ package piaas
 import (
 	"fmt"
 	"github.com/sohoffice/piaas/stringarrays"
+	"os/exec"
 	"testing"
 	"time"
 )
@@ -18,10 +19,10 @@ func TestRsyncWrapper_SyncAll(t *testing.T) {
 		t.Errorf("Unexpected command length, should be 1, but is %d.", len(tester.commands))
 	}
 
-	expected := fmt.Sprintf("rsync -av %s --exclude-from=%s --delete --copy-links . %s", "-e 'ssh -o ConnectTimeout=10'", "/tmp/.piaasignore", "foo@bar:/tmp/foo")
-	if tester.commands[0] != expected {
-		t.Errorf("Unexpected sync all command.\nExpected: %s.\n  Actual: %s.", expected, tester.commands[0])
-	}
+	args := []string{"-av", "-e", "ssh -o ConnectTimeout=10", fmt.Sprintf("--exclude-from=%s", "/tmp/.piaasignore"), "--delete", "--copy-links", ".", "foo@bar:/tmp/foo"}
+	expected := exec.Command("rsync", args...)
+	actual := tester.commands[0]
+	compareCmd(t, expected, actual)
 }
 
 func TestRsyncWrapper_SyncFiles(t *testing.T) {
@@ -40,27 +41,28 @@ func TestRsyncWrapper_SyncFiles(t *testing.T) {
 	if len(tester.commands) != 2 {
 		t.Errorf("Unexpected command length, should be 2, but is %d.", len(tester.commands))
 	}
-	expected1 := fmt.Sprintf("rsync -av %s --exclude-from=%s %s --delete --copy-links . %s",
-		"-e 'ssh -o ConnectTimeout=10'",
-		"/tmp/.piaasignore",
-		fmt.Sprintf("--include='*/' %s --exclude='*'", "--include='/a' --include='/b' --include='/c'"),
-		"foo@bar:/tmp/foo")
-	expected2 := fmt.Sprintf("rsync -av %s --exclude-from=%s %s --delete --copy-links . %s",
-		"-e 'ssh -o ConnectTimeout=10'",
-		"/tmp/.piaasignore",
-		fmt.Sprintf("--include='*/' %s --exclude='*'", "--include='/d'"),
-		"foo@bar:/tmp/foo")
-	actual := tester.commands
-	expected := []string{expected1, expected2}
+	args1 := []string{"-av", "-e", "ssh -o ConnectTimeout=10", fmt.Sprintf("--exclude-from=%s", "/tmp/.piaasignore"),
+		"--include='*/'", "--include='/a'", "--include='/b'", "--include='/c'", "--exclude='*'",
+		"--delete", "--copy-links", ".", "foo@bar:/tmp/foo"}
+	expected1 := exec.Command("rsync", args1...)
 
-	if stringarrays.Compare(actual, expected) == false {
-		t.Errorf("Unexpected sync files commands:\nExpected:\n%s\nActual:\n%s", stringarrays.ToString(expected), stringarrays.ToString(actual))
+	args2 := []string{"-av", "-e", "ssh -o ConnectTimeout=10", fmt.Sprintf("--exclude-from=%s", "/tmp/.piaasignore"),
+		"--include='*/'", "--include='/d'", "--exclude='*'",
+		"--delete", "--copy-links", ".", "foo@bar:/tmp/foo"}
+	expected2 := exec.Command("rsync", args2...)
+	actuals := tester.commands
+	expecteds := []*exec.Cmd{expected1, expected2}
+
+	for i := range expecteds {
+		actual := actuals[i]
+		expected := expecteds[i]
+		compareCmd(t, expected, actual)
 	}
 }
 
 type RsyncWrapperTester struct {
 	rs       RsyncWrapper
-	commands []string
+	commands []*exec.Cmd
 }
 
 func prepare() *RsyncWrapperTester {
@@ -68,13 +70,22 @@ func prepare() *RsyncWrapperTester {
 	rs.SetIgnoreFile("/tmp/.piaasignore")
 
 	tester := RsyncWrapperTester{
-		rs: rs, commands: make([]string, 0),
+		rs: rs, commands: make([]*exec.Cmd, 0),
 	}
 
 	// collect the commands
-	tester.rs.Start(func(cmd string) {
+	tester.rs.Start(func(cmd *exec.Cmd) {
 		tester.commands = append(tester.commands, cmd)
 	})
 
 	return &tester
+}
+
+func compareCmd(t *testing.T, expected *exec.Cmd, actual *exec.Cmd) {
+	if expected.Path != actual.Path {
+		t.Errorf("Unexpected command path.\nExpected: %s.\n  Actual: %s.", expected.Path, actual.Path)
+	}
+	if stringarrays.Compare(expected.Args, actual.Args) == false {
+		t.Errorf("Unexpected command args.\nExpected: %s.\n  Actual: %s.", stringarrays.ToString(expected.Args), stringarrays.ToString(actual.Args))
+	}
 }

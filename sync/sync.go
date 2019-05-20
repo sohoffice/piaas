@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 	"log"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 )
@@ -70,9 +71,17 @@ func Execute(c *cli.Context) error {
 		return err
 	}
 	rsync := piaas.NewRsyncWrapper("rsync", basedir, syncTarget)
-	rsync.Start(func(s string) {
-		log.Println("  | Run:", s)
+	rsync.Start(func(cmd *exec.Cmd) {
+		fmt.Fprintf(os.Stdout, "  | Run: %s\n", cmd.Args)
+		err := cmd.Run()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error running rsync: %s.\n%s\n", err, cmd.Args)
+		} else {
+			fmt.Fprintf(os.Stdout, "  | Done.\n")
+		}
 	})
+	// Trigger a sync all in the beginning.
+	rsync.SyncAll()
 
 	// subscribe to file system changes
 	monitor.SubscribeToCollects(collects)

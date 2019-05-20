@@ -4,7 +4,7 @@ profiles:
     connection:
       host: localhost
       user: douglas
-      destination: /tmp/test
+      destination: /tmp/piaas
     ignoreFile: .piaasignore
   - name: dev
     connection:
