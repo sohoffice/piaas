@@ -1,6 +1,6 @@
 # Go parameters
 PROJECT_NAME=PIAAS
-VERSION=v0.0.1
+VERSION=v0.0.2
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -12,8 +12,7 @@ LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 all: test build-all
 
 build:
-	mkdir -p dist/darwin-amd64
-	cd main && CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/darwin_amd64/$(BINARY_NAME) -v && cd ..
+	cd main && CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/darwin_amd64/$(BINARY_NAME) -v && cd ..
 	chmod a+x dist/$(VERSION)/darwin_amd64/$(BINARY_NAME)
 	@echo "        Built darwin-amd64"
 test:

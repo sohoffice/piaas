@@ -8,7 +8,7 @@ import (
 // handle any message being posted to the debounce channel and start a new debounce period if no current period is running.
 type Debouncer struct {
 	// The length of debounce period in milliseconds.
-	millis int64
+	millis uint64
 	// the function to call when debounce period completes
 	notify func(string)
 	// whether a current debounce period is running
@@ -43,7 +43,7 @@ func handleDebounceEvent(dbPtr *Debouncer) {
 }
 
 // Create a new debouncer
-func NewDebouncer(millis int64, notify func(string)) Debouncer {
+func NewDebouncer(millis uint64, notify func(string)) Debouncer {
 	db := Debouncer{
 		millis:  millis,
 		notify:  notify,

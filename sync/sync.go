@@ -65,12 +65,13 @@ func Execute(c *cli.Context) error {
 	log.Println("Sync to:", syncTarget)
 	log.Println("Ignore file: ", prof.IgnoreFile)
 
-	monitor := piaas.NewRecursiveMonitor(basedir)
+	monitor := piaas.NewMonitor(basedir)
 	ignore, err := readIgnoreFile(prof.IgnoreFile)
 	if err != nil {
 		return err
 	}
 	rsync := piaas.NewRsyncWrapper("rsync", basedir, syncTarget)
+	rsync.SetIgnoreFile(prof.IgnoreFile)
 	rsync.Start(func(cmd *exec.Cmd) {
 		fmt.Fprintf(os.Stdout, "  | Run: %s\n", cmd.Args)
 		err := cmd.Run()
@@ -84,9 +85,9 @@ func Execute(c *cli.Context) error {
 	rsync.SyncAll()
 
 	// subscribe to file system changes
-	monitor.SubscribeToCollects(collects)
+	monitor.Subscribe(collects)
 	// starting watching for file system changes
-	monitor.Watch(1000)
+	monitor.Start(1000)
 	for {
 		collected := <-collects
 		filtered := make(util.StringSet, 0)
