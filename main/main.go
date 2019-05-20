@@ -6,13 +6,19 @@ import (
 	"github.com/golang/glog"
 	"github.com/sohoffice/piaas/sync"
 	"github.com/urfave/cli"
-	"log"
+	"io/ioutil"
 	"os"
 )
 
 func main() {
+	// flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+	// Do not print any output from flag module.
+	flag.CommandLine.SetOutput(ioutil.Discard)
+	// We still would like the service of flag, for it will be used to initialize glog.
+	flag.Parse()
+
 	app := cli.NewApp()
-	app.Name = "Piaas, tools to develop with multiple machines as if you have Personal IAAS."
+	app.Name = "Piaas, tools to develop using multiple machines as if you have Personal IAAS."
 	app.HelpName = "piaas"
 	app.Authors = []cli.Author{
 		{
@@ -25,19 +31,7 @@ func main() {
 	app.Commands = []cli.Command{
 		sync.Prepare(),
 	}
-	var debug bool
-	app.Flags = []cli.Flag{
-		cli.BoolFlag{
-			Name:        "debug",
-			Usage:       "Print debug messages",
-			Destination: &debug,
-		},
-	}
-	if debug == true {
-		log.Println("Debug is on.")
-		flag.Parse()
-		flag.Lookup("logtostderr").Value.Set("true")
-	}
+
 	defer glog.Flush()
 
 	err := app.Run(os.Args)

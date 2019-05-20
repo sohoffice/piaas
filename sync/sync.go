@@ -25,6 +25,10 @@ func Prepare() cli.Command {
 				Usage: "Specify the piaas config file name and path. Default to piaasconfig.yml",
 				Value: "piaasconfig.yml",
 			},
+			cli.BoolFlag{
+				Name:  "debug",
+				Usage: "Print debug messages",
+			},
 		},
 		ArgsUsage: "<profile name>",
 		Action:    Execute,
@@ -40,7 +44,11 @@ func Execute(c *cli.Context) error {
 	if c.NArg() <= 0 {
 		return fmt.Errorf("profile name is required")
 	}
-	changes := make(chan []string)
+	err := piaas.HandleDebug(c)
+	if err != nil {
+		return err
+	}
+	collects := make(chan []string)
 	profileName := c.Args().Get(0)
 	config := piaas.ReadConfig(c.String("config"))
 	prof, err := config.GetProfile(profileName)
@@ -63,18 +71,21 @@ func Execute(c *cli.Context) error {
 	}
 	rsync := piaas.NewRsyncWrapper("rsync", basedir, syncTarget)
 	rsync.Start(func(s string) {
-		log.Println("Run:", s)
+		log.Println("  | Run:", s)
 	})
 
 	// subscribe to file system changes
-	monitor.SubscribeToCollects(changes)
+	monitor.SubscribeToCollects(collects)
 	// starting watching for file system changes
 	monitor.Watch(1000)
 	for {
-		changed := <-changes
-		// make sure the files are not excluded by the ignore rules.
+		collected := <-collects
 		filtered := make(util.StringSet, 0)
-		for _, s := range changed {
+		// make sure the files are not excluded by the ignore rules.
+		for _, s := range collected {
+			// the path should be started with basedir, so anchored path can work.
+			s = path.Join(basedir, s)
+
 			if ignore.Match(s) == false {
 				filtered = *filtered.Add(s)
 			}

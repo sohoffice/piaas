@@ -27,7 +27,7 @@ func handleDebounceEvent(dbPtr *Debouncer) {
 	db := *dbPtr
 	for {
 		tag := <-db.ch
-		glog.Infof("Debouncer triggered: %s, %t", tag, db.running)
+		// glog.Infof("Debouncer triggered: %s, %t", tag, db.running)
 		if !db.running {
 			glog.Infof("Start new debounce period: %s", tag)
 			db.running = true

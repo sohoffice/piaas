@@ -130,12 +130,13 @@ func TestMonitorCollectedChanges(t *testing.T) {
 	}()
 	rm.SubscribeToCollects(ch)
 	rm.Watch(300)
-	// wait for 400 millis to make sure collected are checked.
-	<-time.After(time.Millisecond * 500)
 
 	mt.touchFile(path.Join(tempDir, "collect1"))
 	mt.touchFile(path.Join(tempDir, "collect2"))
 	mt.touchFile(path.Join(tempDir, "collect3"))
+
+	// wait for a small while to make sure collected are checked.
+	<-time.After(time.Millisecond * 500)
 }
 
 type MonitorTest testing.T
