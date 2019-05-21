@@ -32,12 +32,15 @@ type App struct {
 
 type Config struct {
 	ApiVersion string
+	Rsync      string
 	Profiles   []Profile
 	Apps       []App
 }
 
 func ReadConfig(file string) Config {
-	var config Config
+	var config = Config{
+		Rsync: "rsync",
+	}
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		println("Error reading config file:", file)
