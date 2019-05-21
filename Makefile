@@ -1,6 +1,6 @@
 # Go parameters
 PROJECT_NAME=PIAAS
-VERSION=v0.0.2
+VERSION=v0.0.3
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -30,7 +30,7 @@ deps:
 
 # Build on all supported platforms
 build-all: build build-linux build-windows
-	@echo "\n$(PROJECT_NAME) version: $(VERSION)\n"
+	@echo "\n$(PROJECT_NAME) version: $(VERSION) was built.\n"
 
 # Cross compilation on linux
 build-linux:
@@ -42,3 +42,24 @@ build-windows:
 	cd main && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/windows_amd64/$(BINARY_NAME).exe -v && cd ..
 	chmod a+x dist/$(VERSION)/windows_amd64/$(BINARY_NAME).exe
 	@echo "        Built windows-amd64"
+
+# Publish new release
+publish: tests build-all
+	# Tag the main repo with the release version
+	git tag -f -a $(VERSION) -m "$(VERSION)"
+	git push origin :refs/tags/$(VERSION)
+	git push origin $(VERSION)
+
+	# Copy the released file to gh-pages
+	@rm -rf tmp/piaas-gh-pages
+	git clone https://github.com/sohoffice/piaas.git tmp/piaas-gh-pages -b gh-pages --single-branch
+	rm -rf tmp/piaas-gh-pages/files/$(VERSION)
+	cp -R dist/$(VERSION) tmp/piaas-gh-pages/files
+	cd tmp/piaas-gh-pages && git add . && git commit -m "Release version $(VERSION)"
+
+	# Tag the gh-pages repo with the release version
+	cd tmp/piaas-gh-pages && git tag -f -a $(VERSION) -m "$(VERSION)"
+	cd tmp/piaas-gh-pages && git push origin :refs/tags/$(VERSION)
+	cd tmp/piaas-gh-pages && git push origin $(VERSION)
+
+	@echo "\n$(PROJECT_NAME) version: $(VERSION) was released.\n\n"
