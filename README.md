@@ -17,7 +17,7 @@ laptop is relaxed to do the thing that absolutely required it to do.
 
 Download the binary from the following link:
 
-- [Windows, 64 bit](http://sohoffice.github.io/piaas/files/latest/windows_amd64/piaas)
+- [Windows, 64 bit](http://sohoffice.github.io/piaas/files/latest/windows_amd64/piaas.exe)
 - [Mac OS, 64 bit](http://sohoffice.github.io/piaas/files/latest/darwin_amd64/piaas)
 - [Linux, 64 bit](http://sohoffice.github.io/piaas/files/latest/linux_amd64/piaas)
 
