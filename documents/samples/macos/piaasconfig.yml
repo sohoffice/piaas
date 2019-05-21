@@ -1,0 +1,7 @@
+apiVersion: 1
+profiles:
+  - name: dev
+    connection:
+      host: remote
+      user: foo
+      destination: ~/src

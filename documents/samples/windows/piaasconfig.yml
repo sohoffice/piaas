@@ -1,0 +1,10 @@
+apiVersion: 1
+executable:
+  cmd: wsl
+  params: ["rsync"]
+profiles:
+  - name: dev
+    connection:
+      host: remote.host.name
+      user: foo
+      destination: ~/src

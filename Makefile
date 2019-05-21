@@ -7,17 +7,22 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 BINARY_NAME=piaas
+TESTMODE?=
 LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 
-all: test build-all
+all: test$(TESTMODE) build-all
 
 build:
 	cd main && CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/darwin_amd64/$(BINARY_NAME) -v && cd ..
 	chmod a+x dist/$(VERSION)/darwin_amd64/$(BINARY_NAME)
 	@echo "        Built darwin-amd64"
 test:
+	$(GOTEST) -v ./...
+testverbose:
 	$(GOTEST) -v ./... -args -logtostderr
 tests:
+	$(GOTEST) -v ./... -count=10
+testsverbose:
 	$(GOTEST) -v ./... -count=10 -args -logtostderr
 clean:
 	$(GOCLEAN)
@@ -44,22 +49,21 @@ build-windows:
 	@echo "        Built windows-amd64"
 
 # Publish new release
-publish: tests build-all
+publish: tests$(TESTMODE) build-all
 	# Tag the main repo with the release version
 	git tag -f -a $(VERSION) -m "$(VERSION)"
 	git push origin :refs/tags/$(VERSION)
 	git push origin $(VERSION)
+	git push
 
 	# Copy the released file to gh-pages
 	@rm -rf tmp/piaas-gh-pages
 	git clone https://github.com/sohoffice/piaas.git tmp/piaas-gh-pages -b gh-pages --single-branch
 	rm -rf tmp/piaas-gh-pages/files/$(VERSION)
 	cp -R dist/$(VERSION) tmp/piaas-gh-pages/files
+	rm -rf tmp/piaas-gh-pages/files/latest
+	cp -R dist/$(VERSION) tmp/piaas-gh-pages/files/latest
 	cd tmp/piaas-gh-pages && git add . && git commit -m "Release version $(VERSION)"
-
-	# Tag the gh-pages repo with the release version
-	cd tmp/piaas-gh-pages && git tag -f -a $(VERSION) -m "$(VERSION)"
-	cd tmp/piaas-gh-pages && git push origin :refs/tags/$(VERSION)
-	cd tmp/piaas-gh-pages && git push origin $(VERSION)
+	cd tmp/piaas-gh-pages && git push
 
 	@echo "\n$(PROJECT_NAME) version: $(VERSION) was released.\n\n"
