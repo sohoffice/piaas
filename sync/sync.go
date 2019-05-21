@@ -70,7 +70,7 @@ func Execute(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	rsync := piaas.NewRsyncWrapper(config.Rsync, basedir, syncTarget)
+	rsync := piaas.NewRsyncWrapper(config.Executable, basedir, syncTarget)
 	rsync.SetIgnoreFile(prof.IgnoreFile)
 	rsync.Start(func(cmd *exec.Cmd) {
 		fmt.Fprintf(os.Stdout, "  | Run: %s\n", cmd.Args)

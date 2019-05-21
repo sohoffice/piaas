@@ -29,7 +29,7 @@ deps:
 	$(GOGET) github.com/markbates/pop
 
 # Build on all supported platforms
-build-all: build build-linux
+build-all: build build-linux build-windows
 	@echo "\n$(PROJECT_NAME) version: $(VERSION)\n"
 
 # Cross compilation on linux
@@ -37,3 +37,8 @@ build-linux:
 	cd main && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/linux_amd64/$(BINARY_NAME) -v && cd ..
 	chmod a+x dist/$(VERSION)/linux_amd64/$(BINARY_NAME)
 	@echo "        Built linux-amd64"
+
+build-windows:
+	cd main && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/windows_amd64/$(BINARY_NAME).exe -v && cd ..
+	chmod a+x dist/$(VERSION)/windows_amd64/$(BINARY_NAME).exe
+	@echo "        Built windows-amd64"

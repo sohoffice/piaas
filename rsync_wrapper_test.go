@@ -66,7 +66,9 @@ type RsyncWrapperTester struct {
 }
 
 func prepare() *RsyncWrapperTester {
-	rs := NewRsyncWrapper("rsync", "/tmp", "foo@bar:/tmp/foo")
+	rs := NewRsyncWrapper(Executable{
+		Cmd: "rsync",
+	}, "/tmp", "foo@bar:/tmp/foo")
 	rs.SetIgnoreFile("/tmp/.piaasignore")
 
 	tester := RsyncWrapperTester{

@@ -8,7 +8,7 @@ import (
 type RsyncWrapper struct {
 	// The rsync command to execute, usually just 'rsync' on Mac and Linux.
 	// But may involves batch file on windows.
-	rsyncCmd   string
+	Executable
 	basedir    string
 	ignoreFile string
 	syncTarget string
@@ -19,9 +19,9 @@ type RsyncWrapper struct {
 
 // Create a RsyncWrapper using `cmd` as the command, running on `basedir`, syncing to `target`.
 // The RsyncWrapper will also be configured to use ssh options 'ConnectTimeout=10'
-func NewRsyncWrapper(rsyncCmd string, basedir string, target string) RsyncWrapper {
+func NewRsyncWrapper(rsyncCmd Executable, basedir string, target string) RsyncWrapper {
 	return RsyncWrapper{
-		rsyncCmd:   rsyncCmd,
+		Executable: rsyncCmd,
 		basedir:    basedir,
 		syncTarget: target,
 		// Use 10 as the default connect timeout. Can be override.
@@ -58,7 +58,8 @@ func (rs *RsyncWrapper) SyncFiles(files []string) {
 	if len(files) <= 0 {
 		return
 	}
-	var arguments = []string{"-av"}
+	var arguments = rs.Executable.Params
+	arguments = append(arguments, "-av")
 	arguments = append(arguments, rs.getSshOptionsForRsync()...)
 	arguments = append(arguments, rs.getExcludeFromForRsync()...)
 
@@ -70,7 +71,7 @@ func (rs *RsyncWrapper) SyncFiles(files []string) {
 	arguments = append(arguments, []string{"--exclude='*'", "--delete", "--copy-links"}...)
 	arguments = append(arguments, []string{".", rs.syncTarget}...)
 
-	cmd := exec.Command(rs.rsyncCmd, arguments...)
+	cmd := exec.Command(rs.Executable.Cmd, arguments...)
 
 	// Build command similar to this
 	// Ex: rsync -av <ssh options> --exclude-from=...
@@ -82,12 +83,13 @@ func (rs *RsyncWrapper) SyncFiles(files []string) {
 
 // Sync all files to remote.
 func (rs *RsyncWrapper) SyncAll() {
-	var arguments = []string{"-av"}
+	var arguments = rs.Executable.Params
+	arguments = append(arguments, "-av")
 	arguments = append(arguments, rs.getSshOptionsForRsync()...)
 	arguments = append(arguments, rs.getExcludeFromForRsync()...)
 	arguments = append(arguments, []string{"--delete", "--copy-links", ".", rs.syncTarget}...)
 
-	cmd := exec.Command(rs.rsyncCmd, arguments...)
+	cmd := exec.Command(rs.Executable.Cmd, arguments...)
 
 	rs.syncCh <- cmd
 }

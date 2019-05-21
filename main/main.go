@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"os"
+	"os/signal"
 )
 
 var version string
@@ -36,6 +37,14 @@ func main() {
 	}
 
 	defer glog.Flush()
+
+	exitCh := make(chan os.Signal, 1)
+	signal.Notify(exitCh, os.Interrupt, os.Kill)
+	go func() {
+		s := <-exitCh
+		fmt.Fprintf(os.Stdout, "Signal received: %s", s)
+		os.Exit(0)
+	}()
 
 	err := app.Run(os.Args)
 	if err != nil {

@@ -30,16 +30,24 @@ type App struct {
 	Command string
 }
 
+type Executable struct {
+	Cmd    string
+	Params []string
+}
+
 type Config struct {
 	ApiVersion string
-	Rsync      string
-	Profiles   []Profile
-	Apps       []App
+	Executable
+	Profiles []Profile
+	Apps     []App
 }
 
 func ReadConfig(file string) Config {
 	var config = Config{
-		Rsync: "rsync",
+		Executable: Executable{
+			Cmd:    "rsync",
+			Params: []string{},
+		},
 	}
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
