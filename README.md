@@ -54,7 +54,7 @@ This is the main configuration file, where you describe the connection
 info of remote machines.
 
 You may configure more than one machines, find samples of different platform
-in the [document/samples](tree/master/documents/samples) folder.
+in the [document/samples](documents/samples) folder.
 
 An example of piaasconfig.yml
 
