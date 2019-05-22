@@ -195,6 +195,6 @@ the server to compile and serve from there.
 
 ##### Windows
 
-Piaas sync will invoke rsync through WSL, but it's not recommended to run
-itself in WSL bash. If you do, the command may not be terminated by 
-ctrl-c. You'll have to close the entire command prompt instead.
+Piaas sync will invoke rsync through WSL, but it's recommended to run
+it through normal windows command prompt. If you run it through WSL bash, the command may not be terminated by 
+ctrl-c. You'll therefore have to close the entire command box.
