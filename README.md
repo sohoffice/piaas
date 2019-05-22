@@ -1,7 +1,7 @@
 # The Personal IAAS 
 
-Piaas, is a set of tools that help you develop using multiple machines 
-as if having a Personal IAAS.
+Piaas is a set of tools that help you develop using multiple machines 
+as if having Personal IAAS.
 
 We all work on laptop today. However, compiling and serving on laptop
 is crazy. The fan keeps working and creating quite a noise. Your battery
