@@ -30,7 +30,8 @@ The application support Mac OS, but was only tested on Mojave.
 Linux should be fine, but untested.
 
 On windows platform, WSL (windows subsystem linux) is required. At the
-moment **Windows 10** is the only supported version.
+moment **Windows 10** is the only version with WSL so is the only version
+supported.
 
 ## Sync
 
@@ -41,9 +42,11 @@ rsync with a file watcher for the following reasons:
 1. Piaas detects changed files and update only the changed files.
 2. Piaas checks through the ignore file, only necessary files are synced.
  
+### Config
+
 Create the following 2 files in your workspace.
 
-###### piaasconfig.yml
+##### piaasconfig.yml
 
 This is the main configuration file, where you describe the connection
 info of remote machines.
@@ -63,7 +66,30 @@ profiles:
       destination: ~/src
 ```
 
-###### .piaasignore
+###### Windows
+
+The piaas configuration on windows platform is trickier than the other.
+Find the example in the below and note the executable section. This is
+necessary to execute rsync through WSL. Using other rsync binary may work
+but was never tested.
+
+Windows example:
+
+```
+apiVersion: 1
+executable:
+  cmd: wsl
+  params: ["rsync"]
+profiles:
+  - name: dev
+    connection:
+      host: remote.host.name
+      user: foo
+      destination: ~/src
+
+```
+
+##### .piaasignore
 
 The ignore file uses a very similar format as rsync exclude files. The
 following notations are supported.
@@ -86,6 +112,71 @@ An example .piaasignore:
 *.class
 ```
 
+### Prepare
+
+To get piaas sync running, we need to make sure rsync is running. Rsync
+uses ssh under the hood. The following are required.
+
+- SSH key
+- Remote machine was added in known_hosts
+- Local public key is authorized in remote machine
+
+To make sure the above work, follow the below steps
+
+1. Make sure you have ssh key
+
+   ```
+   ls -al ~/.ssh
+   # You should have id_rsa and id_rsa.pub files.
+   ```
+   
+   If you do not have `id_rsa` and `id_rsa.pub`, generate the ssh key
+    
+   ```
+   ssh-keygen
+   ```
+   
+2. Connect to remote to make sure the connection works
+
+   ```
+   # user and remote_host are the connection info from piaasconfig.yml
+   ssh user@remote_host
+   ```
+   
+   You may be prompted with the below
+   
+   ```
+   The authenticity of host 'remote_host (10.1.1.1)' can't be established.
+   ECDSA key fingerprint is SHA256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.
+   Are you sure you want to continue connecting (yes/no)?
+   ```
+   
+   Say `yes` to remember the fingerprint.
+
+3. Authorize yourself with remote machine
+
+   ```
+   ssh-copy-id user@remote_host
+   ```
+   
+   The command will ask you to input password. Upon successful authenticated,
+   you'll be authorized to login to remote host without having to input
+   password each time.
+   
+   ###### No ssh-copy-id ?
+   
+   If your system do not have ssh-copy-id, use your package manager to install
+   it.
+   
+   ```
+   Mac OS: brew install ssh-copy-id
+   ``` 
+
+##### Windows
+
+Piaas sync is using WSL (windows subsystem linux). You need to make sure
+WSL is enabled and execute the above command in WSL bash. 
+
 ### Running
 
 Use the `sync` command of piaas.
@@ -99,3 +190,9 @@ multiple profiles, but sync can only work with one profile at a time.
 
 Your workspace will keep sync with the remote server. You may now go to
 the server to compile and serve from there. 
+
+##### Windows
+
+Piaas sync will invoke rsync through WSL, but it's not recommended to run
+itself in WSL bash. If you do, the command may not be terminated by 
+ctrl-c. You'll have to close the entire command prompt instead.
