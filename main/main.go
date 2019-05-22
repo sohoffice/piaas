@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/sync"
 	"github.com/urfave/cli"
 	"io/ioutil"
@@ -18,8 +18,10 @@ func main() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
 	// Do not print any output from flag module.
 	flag.CommandLine.SetOutput(ioutil.Discard)
-	// We still would like the service of flag, for it will be used to initialize glog.
+	// We still would like the service of flag
 	flag.Parse()
+	// default log level is INFO
+	log.SetLevel(log.InfoLevel)
 
 	app := cli.NewApp()
 	app.Name = "Piaas, tools to develop using multiple machines as if using Personal IAAS."
@@ -35,8 +37,6 @@ func main() {
 	app.Commands = []cli.Command{
 		sync.Prepare(),
 	}
-
-	defer glog.Flush()
 
 	exitCh := make(chan os.Signal, 1)
 	signal.Notify(exitCh, os.Interrupt, os.Kill)

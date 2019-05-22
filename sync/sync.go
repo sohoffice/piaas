@@ -3,13 +3,15 @@ package sync
 import (
 	"bufio"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas"
+	"github.com/sohoffice/piaas/stringarrays"
 	"github.com/sohoffice/piaas/util"
 	"github.com/urfave/cli"
-	"log"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -60,25 +62,32 @@ func Execute(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	basedir := path.Clean(path.Dir("."))
+	basedir, err := filepath.Abs(path.Clean(path.Dir(".")))
+	if err != nil {
+		return err
+	}
+	basedir, err = filepath.EvalSymlinks(basedir)
+	if err != nil {
+		return err
+	}
 	log.Println("Basedir:", basedir)
 	log.Println("Sync to:", syncTarget)
 	log.Println("Ignore file: ", prof.IgnoreFile)
 
 	monitor := piaas.NewMonitor(basedir)
-	ignore, err := readIgnoreFile(prof.IgnoreFile)
+	ignore, err := readIgnoreFile(basedir, prof.IgnoreFile)
 	if err != nil {
 		return err
 	}
 	rsync := piaas.NewRsyncWrapper(config.Executable, basedir, syncTarget)
 	rsync.SetIgnoreFile(prof.IgnoreFile)
 	rsync.Start(func(cmd *exec.Cmd) {
-		fmt.Fprintf(os.Stdout, "  | Run: %s\n", cmd.Args)
+		log.Infof("Run: %s\n", cmd.Args)
 		err := cmd.Run()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error running rsync: %s.\n%s\n", err, cmd.Args)
+			log.Errorf("Error running rsync: %s.\n%s\n", err, cmd.Args)
 		} else {
-			fmt.Fprintf(os.Stdout, "  | Done.\n")
+			log.Infof("Done.\n")
 		}
 	})
 	// Trigger a sync all in the beginning.
@@ -93,21 +102,27 @@ func Execute(c *cli.Context) error {
 		filtered := make(util.StringSet, 0)
 		// make sure the files are not excluded by the ignore rules.
 		for _, s := range collected {
-			// the path should be started with basedir, so anchored path can work.
-			s = path.Join(basedir, s)
-
-			if ignore.Match(s) == false {
-				filtered = *filtered.Add(s)
+			rel, err := filepath.Rel(basedir, s)
+			if err != nil {
+				log.Errorf("error getting relative path: %s.", err)
+				rel = s
+			}
+			log.Debugf("Collected: %s, %s", s, rel)
+			if ignore.MatchRelative(rel) == false {
+				filtered = *filtered.Add(rel)
+			} else {
+				log.Debugf("  | Ignored: %s", rel)
 			}
 		}
 		// After filtering, some files should be synced. Trigger rsync.
 		if len(filtered) > 0 {
+			log.Debugf("Detected file changes:\n%s", stringarrays.ToString(filtered))
 			rsync.SyncFiles(filtered)
 		}
 	}
 }
 
-func readIgnoreFile(ignorefile string) (piaas.RsyncPatterns, error) {
+func readIgnoreFile(basedir string, ignorefile string) (piaas.RsyncPatterns, error) {
 	f, err := os.Open(ignorefile)
 	if err != nil {
 		return piaas.RsyncPatterns{}, err
@@ -125,5 +140,5 @@ func readIgnoreFile(ignorefile string) (piaas.RsyncPatterns, error) {
 		}
 	}
 
-	return piaas.NewRsyncPatterns("", patterns...), nil
+	return piaas.NewRsyncPatterns(basedir, patterns...), nil
 }

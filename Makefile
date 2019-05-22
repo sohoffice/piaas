@@ -1,6 +1,6 @@
 # Go parameters
 PROJECT_NAME=PIAAS
-VERSION=v0.0.3
+VERSION=v0.0.4
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -10,7 +10,7 @@ BINARY_NAME=piaas
 TESTMODE?=
 LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 
-all: test$(TESTMODE) build-all
+all: test$(TESTMODE) build-all update-latest
 
 build:
 	cd main && CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/darwin_amd64/$(BINARY_NAME) -v && cd ..
@@ -28,7 +28,7 @@ clean:
 	$(GOCLEAN)
 	rm -rf dist
 run: build
-	./dist/darwin-amd64/$(BINARY_NAME)
+	./dist/$(VERSION)/darwin_amd64/$(BINARY_NAME) sync cent -debug
 deps:
 	$(GOGET) github.com/markbates/goth
 	$(GOGET) github.com/markbates/pop
@@ -47,6 +47,10 @@ build-windows:
 	cd main && CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/$(VERSION)/windows_amd64/$(BINARY_NAME).exe -v && cd ..
 	chmod a+x dist/$(VERSION)/windows_amd64/$(BINARY_NAME).exe
 	@echo "        Built windows-amd64"
+
+update-latest:
+	@rm -f dist/latest
+	@ln -s ./$(VERSION) dist/latest
 
 # Publish new release
 publish: tests$(TESTMODE) build-all

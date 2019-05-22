@@ -4,8 +4,7 @@ package piaas
 
 import (
 	"github.com/fsnotify/fsevents"
-	"github.com/golang/glog"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"path/filepath"
 	"time"
 )
@@ -46,7 +45,7 @@ func (fsm *FSEventMonitor) Start(debounceTime uint64) {
 
 func (fsm *FSEventMonitor) Subscribe(subscriber chan<- []string) {
 	fsm.collectObservers = append(fsm.collectObservers, subscriber)
-	glog.Infof("Added collect observer: %d.", len(fsm.collectObservers))
+	log.Debugf("Added collect observer: %d.", len(fsm.collectObservers))
 }
 
 func (fsm *FSEventMonitor) Stop() {
@@ -76,16 +75,11 @@ func handleCollectedFSEvent(fsm *FSEventMonitor) {
 func NewFSEventMonitor(path string) FSEventMonitor {
 	evaluated, err := filepath.EvalSymlinks(path)
 	if err != nil {
-		glog.Errorf("Error evaluating sym links: %s", err)
+		log.Errorf("Error evaluating sym links: %s", err)
 		evaluated = path
 	}
 	return FSEventMonitor{
 		startDir:   evaluated,
 		collectsCh: make(chan []string),
 	}
-}
-
-func NewMonitor(startDir string) Monitor {
-	fsm := NewFSEventMonitor(startDir)
-	return &fsm
 }

@@ -1,7 +1,7 @@
 package piaas
 
 import (
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/util"
 	"io/ioutil"
 	"os"
@@ -36,7 +36,7 @@ func TestRsyncMatcher(t *testing.T) {
 }
 
 func runRsyncMatcherTests(t *testing.T, pat RsyncPattern, positives []string, negatives []string) {
-	glog.Infof("Run tests of %s.", pat.ToString())
+	log.Debugf("Run tests of %s.", pat.ToString())
 	for _, s := range positives {
 		if !pat.Match(s) {
 			t.Errorf("%s should match %s.", pat.ToString(), s)
@@ -67,12 +67,12 @@ func TestRsyncPatterns(t *testing.T) {
 func runRsyncPatternsTests(t *testing.T, rp RsyncPatterns, positives []string, negatives []string) {
 	for _, s := range positives {
 		if rp.Match(s) != true {
-			t.Errorf("%s should match.", s)
+			t.Errorf("%s should match by patterns.", s)
 		}
 	}
 	for _, s := range negatives {
 		if rp.Match(s) != false {
-			t.Errorf("%s should not match.", s)
+			t.Errorf("%s should not match by patterns.", s)
 		}
 	}
 }

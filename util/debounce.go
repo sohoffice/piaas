@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -27,9 +27,9 @@ func handleDebounceEvent(dbPtr *Debouncer) {
 	db := *dbPtr
 	for {
 		tag := <-db.ch
-		// glog.Infof("Debouncer triggered: %s, %t", tag, db.running)
+		// log.Debugf("Debouncer triggered: %s, %t", tag, db.running)
 		if !db.running {
-			glog.Infof("Start new debounce period: %s", tag)
+			log.Debugf("Start debounce watcher: %s", tag)
 			db.running = true
 			go func() {
 				// wait for debounce millis

@@ -3,7 +3,7 @@
 package piaas
 
 import (
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/stringarrays"
 	"github.com/sohoffice/piaas/util"
 	"io/ioutil"
@@ -101,7 +101,7 @@ func TestMonitorFileChanges(t *testing.T) {
 			ch <- true
 		}()
 
-		glog.Infof("Event validating observed changes: %s", changes)
+		log.Debugf("Event validating observed changes: %s", changes)
 		if len(changes) != len(expectedChanges) {
 			t.Fatalf("Should receive %d changes, but %d was received.\n%s", len(expectedChanges), len(changes), changes)
 		}
@@ -127,8 +127,8 @@ func TestMonitorInterface(t *testing.T) {
 
 		if stringarrays.IndexOf(collected, path.Join(tempDir, "collect1")) == -1 || stringarrays.IndexOf(collected, path.Join(tempDir, "collect2")) == -1 ||
 			stringarrays.IndexOf(collected, path.Join(tempDir, "collect3")) == -1 {
-			glog.Errorln("Collected results:")
-			glog.Errorln(stringarrays.ToString(collected))
+			log.Errorln("Collected results:")
+			log.Errorln(stringarrays.ToString(collected))
 			t.Errorf("Unexpected collect results: %s", stringarrays.ToString(collected))
 		}
 	}()

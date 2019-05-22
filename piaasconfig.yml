@@ -1,0 +1,7 @@
+apiVersion: 1
+profiles:
+  - name: cent
+    connection:
+      host: centaurium.sohoffice.com
+      user: gowithme
+      destination: /tmp/piaas

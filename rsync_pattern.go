@@ -2,10 +2,9 @@ package piaas
 
 import (
 	"fmt"
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/stringarrays"
 	"github.com/sohoffice/piaas/util"
-	"log"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -151,7 +150,7 @@ func NewRsyncPatterns(basedir string, patterns ...RsyncPattern) RsyncPatterns {
 	if len(basedir) > 0 {
 		cleaned = filepath.Clean(basedir)
 	}
-	glog.Infof("Rsync pattern basedir: %s", cleaned)
+	log.Debugf("Rsync pattern basedir: %s", cleaned)
 	return RsyncPatterns{
 		patterns: patterns,
 		basedir:  cleaned,
@@ -167,13 +166,20 @@ func (rp *RsyncPatterns) Match(path string) bool {
 	}
 	rel, err := filepath.Rel(rp.basedir, path)
 	util.CheckError("Get relative path", err)
+
+	return rp.MatchRelative(rel)
+}
+
+// Working on a path relative to the basedir.
+func (rp *RsyncPatterns) MatchRelative(rel string) bool {
 	if strings.HasPrefix(rel, "./") || strings.HasPrefix(rel, "../") {
 		// I believe this also means path is not under basedir.
-		glog.Infof("Path not truly under basedir.\n- basedir: %s\n- path: %s\n- rel: %s", rp.basedir, path, rel)
+		log.Debugf("Path not truly under basedir.\n- basedir: %s\n- rel: %s", rp.basedir, rel)
 		return false
 	}
+	anchored := "/" + rel
 	for _, pat := range rp.patterns {
-		if pat.Match(rel) {
+		if pat.Match(anchored) {
 			return true
 		}
 	}

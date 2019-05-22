@@ -1,8 +1,10 @@
+// +build darwin
+
 package piaas
 
 import (
 	"fmt"
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/stringarrays"
 	"io/ioutil"
 	"os"
@@ -29,7 +31,7 @@ func TestFSEventMonitor(t *testing.T) {
 	}()
 
 	mon.Subscribe(collectedCh)
-	mon.Start(500)
+	mon.Start(600)
 
 	expected := []string{
 		pathConvert(path.Join(tempDir, "dir-to-delete")),
@@ -46,7 +48,7 @@ func TestFSEventMonitor(t *testing.T) {
 
 	<-completed
 
-	glog.Infof("Collected FSEvents:\n%s\n", stringarrays.ToString(collected))
+	log.Debugf("Collected FSEvents:\n%s\n", stringarrays.ToString(collected))
 	expected = append(expected, path.Join(tempDir, "dir"), path.Join(tempDir, "dir", "foo"))
 	validate(t, collected, expected, []string{}, pathConvert)
 }

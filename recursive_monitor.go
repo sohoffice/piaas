@@ -4,11 +4,13 @@ package piaas
 
 import (
 	"github.com/fsnotify/fsnotify"
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/util"
 	"hash/fnv"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 )
 
 type MonitorPath struct {
@@ -17,6 +19,7 @@ type MonitorPath struct {
 }
 
 type RecursiveMonitor struct {
+	basedir string
 	// This channel publish collected changes.
 	// The changes will be published to CollectObservers.
 	collectsCh chan []string
@@ -52,7 +55,7 @@ type RecursiveMonitor struct {
 // Start watching on all registered monitors, and manage the removal and addition of new directories.
 func (rm *RecursiveMonitor) Start(debounceTime uint64) {
 	rm.debouncer = util.NewDebouncer(debounceTime, func(tag string) {
-		glog.Infof("Received debounce event: %s", tag)
+		log.Debugf("Received debounce event: %s", tag)
 		rm.changes <- ""
 	})
 	rm.collectsCh = make(chan []string)
@@ -63,12 +66,12 @@ func (rm *RecursiveMonitor) Start(debounceTime uint64) {
 
 func (rm *RecursiveMonitor) SubscribeToChanges(subscriber chan<- string) {
 	rm.changesObservers = append(rm.changesObservers, subscriber)
-	glog.Infof("Added changes observer: %d.", len(rm.changesObservers))
+	log.Debugf("Added changes observer: %d.", len(rm.changesObservers))
 }
 
 func (rm *RecursiveMonitor) Subscribe(subscriber chan<- []string) {
 	rm.collectObservers = append(rm.collectObservers, subscriber)
-	glog.Infof("Added collect observer: %d.", len(rm.collectObservers))
+	log.Debugf("Added collect observer: %d.", len(rm.collectObservers))
 }
 
 func (rm *RecursiveMonitor) Stop() {
@@ -88,7 +91,7 @@ func (rm *RecursiveMonitor) add(path string) {
 
 	err := rm.watcher.Add(path)
 	if err != nil {
-		glog.Fatalf("Error adding path to RecursiveMonitor %s: %s", path, err)
+		log.Fatalf("Error adding path to RecursiveMonitor %s: %s", path, err)
 	}
 }
 
@@ -104,7 +107,7 @@ func (rm *RecursiveMonitor) remove(path string) bool {
 		// if the path was monitored, remove it.
 		err := rm.watcher.Remove(path)
 		if err != nil {
-			glog.Infof("Error removing path %s: %s", path, err)
+			log.Infof("Error removing path %s: %s", path, err)
 		} else {
 			delete(rm.monitors, hash)
 			return true
@@ -129,14 +132,14 @@ func (rm *RecursiveMonitor) watchedDirectories() []string {
 
 // notify messages to all change observers
 func (rm *RecursiveMonitor) notifyChanges(msg string) {
-	glog.Infof("notify %d changes observers: %s", len(rm.changesObservers), msg)
+	// log.Debugf("notify %d changes observers: %s", len(rm.changesObservers), msg)
 	for _, sub := range rm.changesObservers {
 		sub <- msg
 	}
 }
 
 func (rm *RecursiveMonitor) notifyCollected(collected []string) {
-	glog.Infof("notify %d collect observers: %d", len(rm.collectObservers), len(collected))
+	log.Debugf("notify %d collect observers: %d messages.", len(rm.collectObservers), len(collected))
 	for _, obs := range rm.collectObservers {
 		obs <- collected
 	}
@@ -148,7 +151,7 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 		select {
 		case event, ok := <-rmPtr.watcher.Events:
 			if !ok {
-				glog.Infof("Watcher event is not ok.")
+				log.Debugf("Watcher event is not ok.")
 				return
 			}
 			filename := filepath.Clean(event.Name)
@@ -156,7 +159,7 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 			case fsnotify.Create:
 				info, err := os.Stat(filename)
 				if err != nil {
-					glog.Infof("File error %s: %s", filename, err)
+					log.Infof("File error %s: %s", filename, err)
 				} else if info.IsDir() { // a new directory was added
 					rmPtr.add(filename)
 				}
@@ -172,13 +175,13 @@ func fsnotifyHandler(rmPtr *RecursiveMonitor) {
 			default:
 				rmPtr.changes <- filename
 			}
-			glog.Infof("fsnotify event: %s", event)
+			log.Debugf("fsnotify event: %s", event)
 		case err, ok := <-rmPtr.watcher.Errors:
 			if !ok {
-				glog.Errorf("Watcher errors is not ok.")
+				log.Errorf("Watcher errors is not ok.")
 				return
 			}
-			glog.Errorf("error: %s", err)
+			log.Errorf("error: %s", err)
 		}
 	}
 }
@@ -188,10 +191,10 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 		msg := <-rmPtr.changes
 		switch msg {
 		case "": // collect event
-			glog.Infof("Collecting monitored changes: %s", rmPtr.accumulated)
+			// log.Debugf("Collecting monitored changes: %s", rmPtr.accumulated)
 			if rmPtr.accumulated == nil {
 				// this is very wrong, accumulated should have at least one msg.
-				glog.Fatalln("Try to collect an empty accumulated list.")
+				log.Fatalln("Try to collect an empty accumulated list.")
 			} else {
 				rmPtr.collectsCh <- rmPtr.accumulated
 				rmPtr.accumulated = nil
@@ -200,7 +203,10 @@ func changesHandler(rmPtr *RecursiveMonitor) {
 			if rmPtr.accumulated == nil {
 				rmPtr.accumulated = make([]string, 0)
 			}
-			glog.Infof("Appending accumulated: %s, %s", rmPtr.accumulated, msg)
+			if rmPtr.basedir != "" && !strings.HasPrefix(msg, rmPtr.basedir) {
+				// make sure the path is full
+				msg = path.Join(rmPtr.basedir, msg)
+			}
 			// rmPtr.accumulated = append(rmPtr.accumulated, msg)
 			rmPtr.accumulated = *rmPtr.accumulated.Add(msg)
 			rmPtr.debouncer.Event(msg)
@@ -222,9 +228,10 @@ func NewRecursiveMonitor(start string) RecursiveMonitor {
 	monitors := make(map[uint32]MonitorPath)
 	watcherPtr, err := fsnotify.NewWatcher()
 	if err != nil {
-		glog.Fatalf("Error creating watcherPtr: %s", err)
+		log.Fatalf("Error creating watcherPtr: %s", err)
 	}
 	rm := RecursiveMonitor{
+		basedir:          start,
 		monitors:         monitors,
 		watcher:          watcherPtr,
 		changes:          make(chan string, 10),
@@ -238,13 +245,8 @@ func NewRecursiveMonitor(start string) RecursiveMonitor {
 		return nil
 	})
 	if err != nil {
-		glog.Fatalf("Can not walk the directory tree %s: %s.", start, err)
+		log.Fatalf("Can not walk the directory tree %s: %s.", start, err)
 	}
 
 	return rm
-}
-
-func NewMonitor(startDir string) Monitor {
-	rm := NewRecursiveMonitor(startDir)
-	return &rm
 }

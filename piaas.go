@@ -1,9 +1,8 @@
 package piaas
 
 import (
-	"flag"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"log"
 )
 
 // Below are common option handler.
@@ -12,7 +11,7 @@ import (
 func HandleDebug(c *cli.Context) error {
 	if c.Bool("debug") == true {
 		log.Println("Debug is on.")
-		flag.Lookup("logtostderr").Value.Set("true")
+		log.SetLevel(log.DebugLevel)
 	}
 	return nil
 }

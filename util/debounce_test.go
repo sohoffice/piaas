@@ -1,7 +1,7 @@
 package util
 
 import (
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"testing"
 	"time"
 )
@@ -19,7 +19,7 @@ func TestDebouncer(t *testing.T) {
 		}
 	}()
 	debouncer := NewDebouncer(100, func(tag string) {
-		glog.Infof("Debounce event received: %s", tag)
+		log.Debugf("Debounce event received: %s", tag)
 		ch <- ""
 	})
 	// trigger event multiple times
