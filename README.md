@@ -33,6 +33,8 @@ On windows platform, WSL (windows subsystem linux) is required. At the
 moment **Windows 10** is the only version with WSL so is the only version
 supported.
 
+If you need instructions on how to enable WSL on windows, check [this](https://docs.microsoft.com/en-us/windows/wsl/install-win10).
+
 ## Sync
 
 Piaas sync is a wrapper around rsync. It will detect workspace changes and sync
