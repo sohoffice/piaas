@@ -1,6 +1,6 @@
 # Go parameters
 PROJECT_NAME=PIAAS
-VERSION=v0.0.4
+VERSION=v0.0.5
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
