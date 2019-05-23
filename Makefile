@@ -50,4 +50,7 @@ build-windows:
 
 # Publish new release
 publish: tests$(TESTMODE) build-all
+	cd dist/darwin_amd64 && zip piaas-darwin-amd64-$(VERSION).zip * && cd ..
+	cd dist/linux_amd64 && zip piaas-linux-amd64-$(VERSION).zip * && cd ..
+	cd dist/windows_amd64 && zip piaas-windows-amd64-$(VERSION).zip * && cd ..
 	release-it

@@ -4,6 +4,6 @@
   },
   "github": {
     "release": true,
-    "assets": ["dist/**/piaas"]
+    "assets": ["dist/**/piaas-*.zip"]
   }
 }
