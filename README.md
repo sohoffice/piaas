@@ -1,14 +1,15 @@
 # The Personal IAAS 
 
-Piaas is a set of tools that help you develop using multiple machines 
-as if having Personal IAAS.
+Piaas is a set of tools that help you develop using multiple machines.
+You can use your favorite IDE locally, while compile and serve on a more
+powerful desktop PC remotely.
 
 We all work on laptop today. However, compiling and serving on laptop
 is crazy. The fan keeps working and creating quite a noise. Your battery
 drained, cycle count increased. More than ever, peace of mind you lost.
 
 Piaas help your workspace in sync with a remote machine, given it a 
-more powerful desktop, a high end iMac or a shared server. Develop with
+more powerful desktop PC, a high end iMac or a shared server. Develop with
 your favorite IDE, while compiling and serving from the desktop. Your 
 laptop is relaxed to do the thing that absolutely required it to do.
 **Great team work**, isn't it ? 
