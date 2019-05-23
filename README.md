@@ -16,7 +16,7 @@ laptop is relaxed to do the thing that absolutely required it to do.
 
 ## Installation
 
-Download the binary from the [github release page](releases/latest):
+Download the binary from the [github release page](/sohoffice/piaas/releases/latest):
 
 - Windows, 64 bit
 - Mac OS, 64 bit
