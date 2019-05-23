@@ -2,8 +2,12 @@
   "git": {
     "tagName": "v${version}"
   },
+  "scripts": {
+    "afterBump": "echo 'VERSION=${version}' > .version && make release",
+    "afterRelease": "echo Successfully released ${name} v${version} to ${repo.repository}."
+  },
   "github": {
     "release": true,
-    "assets": ["dist/piaas"]
+    "assets": ["dist/**/piaas-*.zip"]
   }
 }

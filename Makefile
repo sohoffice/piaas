@@ -1,6 +1,8 @@
+include .version
+export
+
 # Go parameters
 PROJECT_NAME=PIAAS
-VERSION=v0.0.4
 GOCMD=go
 GOBUILD=$(GOCMD) build
 GOCLEAN=$(GOCMD) clean
@@ -48,6 +50,8 @@ build-windows:
 	chmod a+x dist/windows_amd64/$(BINARY_NAME).exe
 	@echo "        Built windows-amd64"
 
-# Publish new release
-publish: tests$(TESTMODE) build-all
-	release-it
+# Create a new release for publish
+release: clean tests$(TESTMODE) build-all
+	cd dist/darwin_amd64 && zip piaas-darwin-amd64-$(VERSION).zip * && cd ..
+	cd dist/linux_amd64 && zip piaas-linux-amd64-$(VERSION).zip * && cd ..
+	cd dist/windows_amd64 && zip piaas-windows-amd64-$(VERSION).zip * && cd ..
