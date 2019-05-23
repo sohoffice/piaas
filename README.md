@@ -22,7 +22,7 @@ Download the binary from the [github release page](https://github.com/sohoffice/
 - Mac OS, 64 bit
 - Linux, 64 bit
 
-Place the binary in your path and you're done.
+Extract and place the binary in your path and you're done.
 
 ## System requirements
 
