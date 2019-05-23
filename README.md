@@ -15,11 +15,11 @@ laptop is relaxed to do the thing that absolutely required it to do.
 
 ## Installation
 
-Download the binary from the following link:
+Download the binary from the [github release page](releases/latest):
 
-- [Windows, 64 bit](http://sohoffice.github.io/piaas/files/latest/windows_amd64/piaas.exe)
-- [Mac OS, 64 bit](http://sohoffice.github.io/piaas/files/latest/darwin_amd64/piaas)
-- [Linux, 64 bit](http://sohoffice.github.io/piaas/files/latest/linux_amd64/piaas)
+- Windows, 64 bit
+- Mac OS, 64 bit
+- Linux, 64 bit
 
 Place the binary in your path and you're done.
 
