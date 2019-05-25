@@ -5,3 +5,7 @@ profiles:
       host: remote
       user: foo
       destination: ~/src
+apps:
+  - name: web
+    cmd: "ng"
+    params: ["serve", "--ssl", "--host", "0.0.0.0", "--disable-host-check"]
