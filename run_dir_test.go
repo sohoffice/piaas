@@ -1,7 +1,6 @@
 package piaas
 
 import (
-	"github.com/sohoffice/piaas/util"
 	"os"
 	"path"
 	"path/filepath"
@@ -20,10 +19,10 @@ func TestRunDir(t *testing.T) {
 }
 
 func checkPath(t *testing.T, expected string, actual string) {
-	actual2, err := filepath.EvalSymlinks(actual)
-	util.CheckError("check actual path", err)
-	expected2, err := filepath.EvalSymlinks(expected)
-	util.CheckError("check expected path", err)
+	actual2, _ := filepath.EvalSymlinks(actual)
+	// util.CheckError("check actual path", err)
+	expected2, _ := filepath.EvalSymlinks(expected)
+	// util.CheckError("check expected path", err)
 
 	if expected2 != actual2 {
 		t.Errorf("Unexpected path. Expecting %s, Actual: %s.", expected, actual)

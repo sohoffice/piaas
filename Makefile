@@ -9,28 +9,32 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 BINARY_NAME=piaas
-TESTMODE?=
+TESTMODE?=all
 LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 
-all: test$(TESTMODE) build-all
+all: test build-all
 
 build:
 	cd main && CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 $(GOBUILD) $(LDFLAGS) -o ../dist/darwin_amd64/$(BINARY_NAME) -v && cd ..
 	chmod a+x dist/darwin_amd64/$(BINARY_NAME)
 	@echo "        Built darwin-amd64"
-test:
+test: test$(TESTMODE)
+testall:
 	$(GOTEST) -v ./...
-testverbose:
-	$(GOTEST) -v ./... -args -logtostderr
-tests:
+testdebug:
+	$(GOTEST) -v ./... -args -debug
+tests: tests$(TESTMODE)
+testsall:
 	$(GOTEST) -v ./... -count=10
-testsverbose:
-	$(GOTEST) -v ./... -count=10 -args -logtostderr
+testsdebug:
+	$(GOTEST) -v ./... -count=10 -args -debug
 clean:
 	$(GOCLEAN)
 	rm -rf dist
 run: build
 	./dist/darwin_amd64/$(BINARY_NAME) sync cent -debug
+cover:
+	go test ./... -cover
 deps:
 	$(GOGET) github.com/markbates/goth
 	$(GOGET) github.com/markbates/pop
