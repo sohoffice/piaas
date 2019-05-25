@@ -44,10 +44,10 @@ func main() {
 	piaas.SubscribeExitSignal(func(sig os.Signal) {
 		// Upon receiving the signal, wait for 500 millis before exit.
 		time.AfterFunc(time.Millisecond*500, func() {
-			log.Debugln("Terminating ...")
+			log.Debugln("Piaas terminating ...")
 			os.Exit(0)
 		})
-	})
+	}, false)
 	piaas.HandleExitSignal()
 
 	err := cliApp.Run(os.Args)

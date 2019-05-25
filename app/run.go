@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 func PrepareRun() cli.Command {
@@ -19,14 +20,12 @@ func PrepareRun() cli.Command {
 		Usage:   "Start the app",
 		Flags: append(piaas.PrepareCommonFlags(), cli.BoolFlag{
 			Name:  "tail, t",
-			Usage: "Tail the output after the app is started.",
+			Usage: "Tail the app logs.",
 		}),
 		ArgsUsage: "[app name]",
 		Action:    ExecuteRun,
 	}
 }
-
-var runDir piaas.RunDir
 
 func ExecuteRun(c *cli.Context) error {
 	var appName string
@@ -43,16 +42,16 @@ func ExecuteRun(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	runDir = piaas.NewRunDir("./.piaas.d")
-	run(app, c)
+	runDir := piaas.NewRunDir("./.piaas.d")
+	run(runDir, app, c)
 
 	return nil
 }
 
-func run(app piaas.App, c *cli.Context) {
-	var params []string
+func run(runDir piaas.RunDir, app piaas.App, c *cli.Context) {
+	var args []string
 	for _, p := range app.Params {
-		params = append(params, os.Expand(p, getEnvOrError))
+		args = append(args, os.Expand(p, getEnvOrError))
 	}
 
 	logfileName := runDir.Logfile(app.Name)
@@ -61,27 +60,30 @@ func run(app piaas.App, c *cli.Context) {
 	logfile, err := os.Create(logfileName)
 	util.CheckError("create logfile", err)
 
-	cmd := exec.Command(app.Cmd, params...)
-	// Use logfile for stdout and stderr
-	cmd.Stdout = logfile
-	cmd.Stderr = logfile
+	cmd := exec.Command(app.Cmd, args...)
+	pid := runCmd(cmd, logfile)
 
-	err = cmd.Start()
-	util.CheckError("start command", err)
-	pid := fmt.Sprintf("%d", cmd.Process.Pid)
-
-	log.Infof("Run app %s: %s", app.Name, strings.Join(append([]string{app.Cmd}, params...), " "))
+	log.Infof("Run app %s: %s", app.Name, strings.Join(append([]string{app.Cmd}, args...), " "))
 	log.Infof("Logfile: %s", logfileName)
-	log.Infof("Pid: %d", cmd.Process.Pid)
-	err = ioutil.WriteFile(runDir.Pidfile(app.Name), []byte(pid), 0644)
+	log.Infof("Pid: %d", pid)
+	err = ioutil.WriteFile(runDir.Pidfile(app.Name), []byte(fmt.Sprintf("%d", pid)), 0644)
 	util.CheckError("write pidfile", err)
+	log.Infoln("---------------------------")
 
 	if c.Bool("tail") {
-		// Do not complete in tail mode.
-		completeCh := make(chan bool, 1)
+		waitCh := make(chan bool, 1)
 
-		// wait for a channel that will never arrive.
-		<-completeCh
+		tailer := tail(runDir, app)
+		piaas.SubscribeExitSignal(func(sig os.Signal) {
+			log.Debugf("Stop tailing ...")
+
+			tailer.Close()
+			waitCh <- true
+		}, true)
+
+		<-waitCh
+		close(waitCh)
+		log.Debugln("Stop piaas run.")
 	}
 }
 
@@ -92,4 +94,21 @@ func getEnvOrError(name string) string {
 		val = ""
 	}
 	return val
+}
+
+func tail(runDir piaas.RunDir, app piaas.App) *Tail {
+	log.Infof("Tailing app %s: %s.", app.Name, runDir.Logfile(app.Name))
+	tail := NewTail(runDir.Logfile(app.Name), os.Stdout, 10240)
+
+	go func() {
+		for {
+			<-time.After(time.Millisecond * 500)
+			tail.Read(-1)
+		}
+	}()
+
+	tail.Start()
+	tail.Read(-1)
+
+	return tail
 }

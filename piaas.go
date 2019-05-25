@@ -39,19 +39,28 @@ func HandleExitSignal() {
 
 	go func() {
 		sig := <-signalCh
+		// no longer accept other signals.
+		close(signalCh)
 		log.Debugf("Signal received: %s", sig)
 
 		// notify all observers.
 		for _, obs := range exitObservers {
 			obs(sig)
 		}
+
 	}()
 }
 
 var exitObservers []func(os.Signal)
 
 // Add observer to listen to exit signal.
-func SubscribeExitSignal(obs func(os.Signal)) {
-	log.Infof("Add a exit observer")
-	exitObservers = append(exitObservers, obs)
+// Set preferredFront to true to make sure the observer is ranked in front.
+func SubscribeExitSignal(obs func(os.Signal), preferredFront bool) {
+	if preferredFront {
+		log.Debugf("Add an exit observer in the first position")
+		exitObservers = append([]func(os.Signal){obs}, exitObservers...)
+	} else {
+		log.Debugf("Add an exit observer in the last position")
+		exitObservers = append(exitObservers, obs)
+	}
 }

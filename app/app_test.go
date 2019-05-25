@@ -1,4 +1,4 @@
-package piaas
+package app
 
 import (
 	"flag"
