@@ -2,4 +2,5 @@
 dist
 tmp
 /piaasconfig.yml
+.vagrant
 .version

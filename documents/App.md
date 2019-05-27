@@ -2,12 +2,12 @@ App
 ====
 
 Piaas app is a wrapper around any arbitrary command. It allows you to 
-start your commands in the background. Piaas app is slightly better than 
-running the command directly on your own.
+start your command in the background. Piaas app is slightly better than 
+running the command directly for the following reasons.
 
 - It keeps the command running in the background. Normally you would need
   to use screen or nohup to do the same.
-- You can manage your app in a unified set of commands:
+- You can manage your app in a unified way:
   - Start with `piaas app run [app name]`.
   - Tail the log with `piaas app log [app name]`.
   - Stop with `piaas app stop [app name]`.
@@ -21,9 +21,8 @@ Create or update the following file in your workspace.
 This is the main configuration file, where you describe the connection
 info of remote machines. It can also be used to define apps.
 
-You can configure multiple apps. When configured with multiple apps, you'll 
-have to specify the app name as a target. If only one app is configured,
-you may skip that part in command line.
+When configured with multiple apps, you'll have to specify the app name 
+as a target. However, if you only have one app, you may skip it.
 
 An example of piaasconfig.yml
 
@@ -44,17 +43,18 @@ apps:
 Use the `app` command of piaas.
 
 ```
-piaas app <subcommand> [app name]
+piaas app <sub command> [app name]
 ```
 
 The sub commands are:
 
-- run, Start the specified app in the background
+- run, Run the specified app in the background
 - log, Tail the log of the specified app
 - stop, Stop the app
 - status, Print the status of all apps
 
 The app name is defined in your `piaasconfig.yml` file. You may defined 
-multiple apps, but only one app at a time. If you have only app defined,
-you do not have to supply the app name. The sole app will be used.
+multiple apps, but the command work with only one app at a time. With 
+only app defined, you may skip the app name, and the sole app will be 
+used.
 

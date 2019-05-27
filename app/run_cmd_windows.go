@@ -3,9 +3,11 @@
 package app
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas/util"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 )
 
@@ -19,6 +21,7 @@ func runCmd(cmd *exec.Cmd, output *os.File) int {
 		CreationFlags: syscall.CREATE_NEW_PROCESS_GROUP,
 	}
 
+	log.Debugf("Run windows command: %s", strings.Join(cmd.Args, " "))
 	err := cmd.Start()
 	util.CheckError("start command", err)
 
