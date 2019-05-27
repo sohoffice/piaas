@@ -1,5 +1,3 @@
-// +build !darwin
-
 package piaas
 
 import (
@@ -107,7 +105,7 @@ func (rm *RecursiveMonitor) remove(path string) bool {
 		// if the path was monitored, remove it.
 		err := rm.watcher.Remove(path)
 		if err != nil {
-			log.Infof("Error removing path %s: %s", path, err)
+			log.Debugf("Error removing path %s: %s", path, err)
 		} else {
 			delete(rm.monitors, hash)
 			return true
@@ -238,14 +236,16 @@ func NewRecursiveMonitor(start string) RecursiveMonitor {
 		changesObservers: make([]chan<- string, 0),
 	}
 
+	log.Debugf("Walking: %s", start)
 	err = filepath.Walk(start, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
+			log.Debugf("  | Added: %s", path)
 			rm.add(path)
 		}
 		return nil
 	})
 	if err != nil {
-		log.Fatalf("Can not walk the directory tree %s: %s.", start, err)
+		log.Fatalf("Error walking the directory tree %s: %s.", start, err)
 	}
 
 	return rm
