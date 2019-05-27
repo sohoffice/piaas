@@ -53,7 +53,7 @@ func (rp *RsyncPattern) matchParts(parts *[]string, endIndex int) bool {
 	var flag bool
 	// if we're in the full match mode, join the path to match
 	if rp.isFull {
-		full := filepath.Join((*parts)[0 : endIndex+1]...)
+		full := filepath.ToSlash(filepath.Join((*parts)[0 : endIndex+1]...))
 		flag = rp.pattern.Match([]byte(full))
 	} else {
 		// otherwise match the element pointed by endIndex
