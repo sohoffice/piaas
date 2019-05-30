@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// PrepareRun provisions the cli argument of the run command.
 func PrepareRun() cli.Command {
 	return cli.Command{
 		Name:    "run",
@@ -27,6 +28,7 @@ func PrepareRun() cli.Command {
 	}
 }
 
+// ExecuteRun is the entry point of the run command
 func ExecuteRun(c *cli.Context) error {
 	var appName string
 	if c.NArg() >= 1 {
@@ -48,6 +50,7 @@ func ExecuteRun(c *cli.Context) error {
 	return nil
 }
 
+// run will start the specified app in the background using the specified runDir and cli context.
 func run(runDir piaas.RunDir, app piaas.App, c *cli.Context) {
 	var args []string
 	for _, p := range app.Params {

@@ -4,8 +4,8 @@ import (
 	"github.com/urfave/cli"
 )
 
-// Prepare the sync module.
-// This usually involves setup the correct module flags.
+// Prepare will prepare the sync module.
+// This will setup the relevant cli flags of this module.
 func Prepare() cli.Command {
 	return cli.Command{
 		Name:    "app",
@@ -13,6 +13,7 @@ func Prepare() cli.Command {
 		Usage:   "Operating an app",
 		Subcommands: []cli.Command{
 			PrepareRun(),
+			PrepareStop(),
 		},
 	}
 }

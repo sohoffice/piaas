@@ -1,6 +1,7 @@
 /.idea
 .git
 .vagrant
+/.piaas.d
 *___jb_tmp___
 *___jb_old___
 

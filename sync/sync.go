@@ -19,20 +19,10 @@ import (
 // This usually involves setup the correct module flags.
 func Prepare() cli.Command {
 	return cli.Command{
-		Name:    "sync",
-		Aliases: []string{"s"},
-		Usage:   "Synchronize local files to remote using rsync",
-		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "config",
-				Usage: "Specify the piaas config file name and path. Default to piaasconfig.yml",
-				Value: "piaasconfig.yml",
-			},
-			cli.BoolFlag{
-				Name:  "debug",
-				Usage: "Print debug messages",
-			},
-		},
+		Name:      "sync",
+		Aliases:   []string{"s"},
+		Usage:     "Synchronize local files to remote using rsync",
+		Flags:     piaas.PrepareCommonFlags(),
 		ArgsUsage: "<profile name>",
 		Action:    Execute,
 	}
