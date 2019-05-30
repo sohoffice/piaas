@@ -44,8 +44,7 @@ func ExecuteRun(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	runDir := piaas.NewRunDir("./.piaas.d")
-	run(runDir, app, c)
+	run(defaultRunDir, app, c)
 
 	return nil
 }

@@ -36,7 +36,6 @@ func ExecuteStatus(c *cli.Context) error {
 	}
 
 	config := piaas.ReadConfig(c.String("config"))
-	runDir := piaas.NewRunDir("./.piaas.d")
 
 	if c.NArg() >= 1 {
 		for i := 0; i < c.NArg(); i++ {
@@ -46,10 +45,10 @@ func ExecuteStatus(c *cli.Context) error {
 				log.Debugln("Error reading app:", err)
 				return fmt.Errorf("error finding app '%s'", appName)
 			}
-			printStatus(runDir, app)
+			printStatus(defaultRunDir, app)
 		}
 	} else {
-		printAllStatus(runDir, config)
+		printAllStatus(defaultRunDir, config)
 	}
 
 	return nil

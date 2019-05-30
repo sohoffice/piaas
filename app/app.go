@@ -6,6 +6,8 @@ import (
 	"github.com/urfave/cli"
 )
 
+var defaultRunDir = piaas.NewRunDir("./.piaas.d")
+
 // Prepare will prepare the sync module.
 // This will setup the relevant cli flags of this module.
 func Prepare() cli.Command {
@@ -35,8 +37,7 @@ func ExecuteApp(c *cli.Context) error {
 	}
 
 	config := piaas.ReadConfig(c.String("config"))
-	runDir := piaas.NewRunDir("./.piaas.d")
-	printAllStatus(runDir, config)
+	printAllStatus(defaultRunDir, config)
 
 	return nil
 }

@@ -14,6 +14,7 @@ import (
 func PrepareStop() cli.Command {
 	return cli.Command{
 		Name:      "stop",
+		Aliases:   []string{"s"},
 		Usage:     "Stop the app",
 		ArgsUsage: "[app name]",
 		Flags:     piaas.PrepareCommonFlags(),
@@ -37,9 +38,8 @@ func ExecuteStop(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	runDir := piaas.NewRunDir("./.piaas.d")
 
-	return stop(runDir, app)
+	return stop(defaultRunDir, app)
 }
 
 // stop actually stop the process noted in the pidfile.
