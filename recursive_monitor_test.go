@@ -175,14 +175,14 @@ func (t *MonitorTest) touchFile(path string) {
 func (t *MonitorTest) writeFile(path string, bytes *[]byte) {
 	err := ioutil.WriteFile(path, *bytes, 0644)
 	if err != nil {
-		t.Fatalf("Error touching file %s: %s", path, err)
+		log.Errorf("Error touching file %s: %s", path, err)
 	}
 }
 
 func (t *MonitorTest) removeFile(path string) {
 	err := os.RemoveAll(path)
 	if err != nil {
-		t.Fatalf("Error deleting file %s: %s", path, err)
+		log.Errorf("Error deleting file %s: %s", path, err)
 	}
 }
 
@@ -196,7 +196,7 @@ func (t *MonitorTest) rename(oldName string, newName string) {
 func (t *MonitorTest) prepareTestDir() string {
 	tempDir, err := ioutil.TempDir("", "walk-test")
 	if err != nil {
-		t.Fatalf("Error creating temp dir: %s", err)
+		log.Errorf("Error creating temp dir: %s", err)
 	}
 
 	// Create the test tree hierarchy

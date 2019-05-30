@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+	"github.com/sohoffice/piaas"
 	"github.com/urfave/cli"
 )
 
@@ -11,9 +13,30 @@ func Prepare() cli.Command {
 		Name:    "app",
 		Aliases: []string{"a"},
 		Usage:   "Operating an app",
+		Flags:   piaas.PrepareCommonFlags(),
 		Subcommands: []cli.Command{
 			PrepareRun(),
 			PrepareStop(),
+			PrepareStatus(),
 		},
+		Action: ExecuteApp,
 	}
+}
+
+func ExecuteApp(c *cli.Context) error {
+	if c.NArg() > 0 {
+		fmt.Println("Invalid app command")
+		cli.ShowAppHelpAndExit(c, 1)
+	}
+
+	err := piaas.HandleDebug(c)
+	if err != nil {
+		return err
+	}
+
+	config := piaas.ReadConfig(c.String("config"))
+	runDir := piaas.NewRunDir("./.piaas.d")
+	printAllStatus(runDir, config)
+
+	return nil
 }

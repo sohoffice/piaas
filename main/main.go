@@ -26,7 +26,8 @@ func main() {
 	log.SetLevel(log.InfoLevel)
 
 	cliApp := cli.NewApp()
-	cliApp.Name = "Piaas, tools to develop using multiple machines as if using Personal IAAS."
+	cliApp.Name = "Piaas"
+	cliApp.Description = "Increase productivity of developer by leveraging computing power of multiple machines."
 	cliApp.HelpName = "piaas"
 	cliApp.Authors = []cli.Author{
 		{
