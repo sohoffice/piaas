@@ -44,6 +44,12 @@ func ExecuteRun(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+
+	_, pid, err := findAppProc(defaultRunDir, app)
+	if pid != -1 {
+		return fmt.Errorf("app '%s' is already running", app.Name)
+	}
+
 	run(defaultRunDir, app, c)
 
 	return nil

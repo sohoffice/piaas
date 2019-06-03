@@ -5,9 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/sohoffice/piaas"
 	"github.com/urfave/cli"
-	"io/ioutil"
 	"os"
-	"strconv"
 )
 
 // PrepareStop prepare command line argument for stop sub command
@@ -44,28 +42,19 @@ func ExecuteStop(c *cli.Context) error {
 
 // stop actually stop the process noted in the pidfile.
 func stop(runDir piaas.RunDir, app piaas.App) error {
-	pidBytes, err := ioutil.ReadFile(runDir.Pidfile(app.Name))
+	proc, pid, err := findAppProc(runDir, app)
 	if err != nil {
-		log.Debugf("Error: %s", err)
-		return fmt.Errorf("app '%s' is not running", app.Name)
-	}
-
-	pid, err := strconv.ParseInt(string(pidBytes), 10, 32)
-	if err != nil {
-		log.Debugf("Error: %s", err)
-		return fmt.Errorf("app '%s' is not running", app.Name)
-	}
-
-	proc, err := os.FindProcess(int(pid))
-	if err != nil {
-		log.Debugf("Error: %s", err)
+		// remove the pidfile if the process can not be located.
+		defer os.Remove(runDir.Pidfile(app.Name))
 		return fmt.Errorf("app '%s' is not running", app.Name)
 	}
 
 	err = proc.Kill()
 	if err != nil {
+		// remove the pidfile if the process can not be killed. Usually because of not found.
+		defer os.Remove(runDir.Pidfile(app.Name))
 		log.Debugf("Error: %s", err)
-		return fmt.Errorf("can not kill app '%s'", app.Name)
+		return fmt.Errorf("can not kill app '%s' of pid: %d", app.Name, pid)
 	}
 
 	// remove the pidfile on successful process kill.

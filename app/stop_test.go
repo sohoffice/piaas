@@ -30,9 +30,9 @@ func TestStop(t *testing.T) {
 	}
 	_, err = os.Stat(runDir.Pidfile("stop1"))
 	if err != nil {
-		t.Errorf("Pidfile has error: %s", err)
+		log.Debugln("Pidfile will be deleted if fail to stop the app.")
 	} else {
-		log.Debugln("Pidfile remain to exist if fail to stop the app.")
+		t.Errorf("Pidfile should be deleted.")
 	}
 
 	var cmd *exec.Cmd
