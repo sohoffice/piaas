@@ -8,6 +8,22 @@ rsync with a file watcher for the following reasons:
 1. Piaas detects changed files and update only the changed files.
 2. Piaas checks through the ignore file, only necessary files are synced.
 
+Piaas is also more suitable than using modern file syncing services like Dropbox.
+
+1. Dropbox will sync all files, including the compiled files. 
+
+   As you know, the compilation can happen on both ends of the sync.
+   This will eventually create a lot of conflicts and headaches.
+2. It's not easy to exclude files, if possible. 
+
+   With Dropbox you can exclude folders, but not a single file. 
+   The exclude is lost if the folder is deleted. Think about a `make clean`.
+3. Dropbox is slightly slower.
+
+   Everything will be synced. 
+   If your machines are not in the same local network, they will be synced through server. (Through VPN for example)
+   This is slightly slower than simply using piaas.
+
 ## Config
 
 Create the following 2 files in your workspace.
