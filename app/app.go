@@ -24,6 +24,7 @@ func Prepare() cli.Command {
 			PrepareRun(),
 			PrepareStop(),
 			PrepareStatus(),
+			PrepareLog(),
 		},
 		Action: ExecuteApp,
 	}
