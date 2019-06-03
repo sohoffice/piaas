@@ -60,7 +60,7 @@ func logApp(runDir piaas.RunDir, app piaas.App) error {
 
 	<-waitCh
 	close(waitCh)
-	log.Debugln("Stop piaas run.")
+	log.Debugln("Stop piaas log.")
 
 	return nil
 }
