@@ -1,4 +1,4 @@
-package util
+package app
 
 import (
 	"flag"
@@ -15,5 +15,6 @@ func TestMain(m *testing.M) {
 	if *debugPtr {
 		log.SetLevel(log.DebugLevel)
 	}
+
 	os.Exit(m.Run())
 }

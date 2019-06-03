@@ -3,5 +3,5 @@ profiles:
   - name: cent
     connection:
       host: centaurium.sohoffice.com
-      user: gowithme
-      destination: /tmp/piaas
+      user: piaas
+      destination: ~/src

@@ -1,5 +1,3 @@
-// +build !darwin
-
 package piaas
 
 import (
@@ -9,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"testing"
 	"time"
@@ -30,9 +29,15 @@ func TestNewRecursiveMonitor(t *testing.T) {
 			stringarrays.ToString(expectedMonitorNames), stringarrays.ToString(rm.watchedDirectories()))
 	}
 
-	for _, monitoredPath := range rm.watchedDirectories() {
-		if stringarrays.IndexOf(expectedMonitorNames, monitoredPath) == -1 {
-			t.Errorf("monitor path %s was not expected.", monitoredPath)
+	actual := util.StringSet{}
+	for _, act := range rm.watchedDirectories() {
+		log.Debugf("  | Add watched: %s", filepath.ToSlash(act))
+		actual = *actual.Add(filepath.ToSlash(act))
+	}
+	for _, expected := range expectedMonitorNames {
+		exp := filepath.ToSlash(expected)
+		if stringarrays.IndexOf(actual, exp) == -1 {
+			t.Errorf("Expected monitor path %s was not found. Actual: %s", exp, stringarrays.ToString(actual))
 		}
 	}
 }
@@ -90,7 +95,7 @@ func TestMonitorFileChanges(t *testing.T) {
 	// test by adding a new directory
 	mtPtr.mkDir(path.Join(tempDir, "foo-dir"))
 	expectedChanges = *expectedChanges.Add(path.Join(tempDir, "foo-dir"))
-	<-time.After(time.Millisecond * 50)
+	<-time.After(time.Millisecond * 200)
 	// the below file can be added before foo-dir was monitored, so we have to wait a few while to make sure the subscription works.
 	mtPtr.touchFile(path.Join(tempDir, "foo-dir", "abc"))
 	expectedChanges = *expectedChanges.Add(path.Join(tempDir, "foo-dir", "abc"))
@@ -102,11 +107,14 @@ func TestMonitorFileChanges(t *testing.T) {
 		}()
 
 		log.Debugf("Event validating observed changes: %s", changes)
-		if len(changes) != len(expectedChanges) {
+		if len(changes) < len(expectedChanges) {
 			t.Fatalf("Should receive %d changes, but %d was received.\n%s", len(expectedChanges), len(changes), changes)
 		}
-		if !expectedChanges.Compare(changes) {
-			t.Fatalf("Expecting: \n%s\nActual: \n%s", expectedChanges.ToString(), changes.ToString())
+		for _, exp := range expectedChanges {
+			expected := filepath.FromSlash(exp)
+			if changes.IndexOf(expected) == -1 {
+				t.Errorf("Expected change %s wasn't recorded.", expected)
+			}
 		}
 	}()
 	<-ch
@@ -123,13 +131,18 @@ func TestMonitorInterface(t *testing.T) {
 	ch := make(chan []string)
 	go func() {
 		collected := <-ch
-		sort.Strings(collected)
+		var converted []string
+		for _, col := range collected {
+			converted = append(converted, filepath.ToSlash(col))
+		}
+		sort.Strings(converted)
 
-		if stringarrays.IndexOf(collected, path.Join(tempDir, "collect1")) == -1 || stringarrays.IndexOf(collected, path.Join(tempDir, "collect2")) == -1 ||
-			stringarrays.IndexOf(collected, path.Join(tempDir, "collect3")) == -1 {
+		if stringarrays.IndexOf(converted, filepath.ToSlash(path.Join(tempDir, "collect1"))) == -1 ||
+			stringarrays.IndexOf(converted, filepath.ToSlash(path.Join(tempDir, "collect2"))) == -1 ||
+			stringarrays.IndexOf(converted, filepath.ToSlash(path.Join(tempDir, "collect3"))) == -1 {
 			log.Errorln("Collected results:")
-			log.Errorln(stringarrays.ToString(collected))
-			t.Errorf("Unexpected collect results: %s", stringarrays.ToString(collected))
+			log.Errorln(stringarrays.ToString(converted))
+			t.Errorf("Unexpected collect results: %s", stringarrays.ToString(converted))
 		}
 	}()
 	monitor.Subscribe(ch)
@@ -162,14 +175,14 @@ func (t *MonitorTest) touchFile(path string) {
 func (t *MonitorTest) writeFile(path string, bytes *[]byte) {
 	err := ioutil.WriteFile(path, *bytes, 0644)
 	if err != nil {
-		t.Fatalf("Error touching file %s: %s", path, err)
+		log.Errorf("Error touching file %s: %s", path, err)
 	}
 }
 
 func (t *MonitorTest) removeFile(path string) {
 	err := os.RemoveAll(path)
 	if err != nil {
-		t.Fatalf("Error deleting file %s: %s", path, err)
+		log.Errorf("Error deleting file %s: %s", path, err)
 	}
 }
 
@@ -183,16 +196,16 @@ func (t *MonitorTest) rename(oldName string, newName string) {
 func (t *MonitorTest) prepareTestDir() string {
 	tempDir, err := ioutil.TempDir("", "walk-test")
 	if err != nil {
-		t.Fatalf("Error creating temp dir: %s", err)
+		log.Errorf("Error creating temp dir: %s", err)
 	}
 
 	// Create the test tree hierarchy
 	t.mkDir(path.Join(tempDir, "foo", "bar"))
 	t.mkDir(path.Join(tempDir, "foo", "baz"))
-	t.touchFile(path.Join(tempDir, "foo", "to-be-renamed"))
+	t.mkDir(path.Join(tempDir, "foo1"))
 	t.mkDir(path.Join(tempDir, "to-be-deleted"))
 	t.mkDir(path.Join(tempDir, "to-be-renamed-dir"))
-	t.mkDir(path.Join(tempDir, "foo1"))
+	t.touchFile(path.Join(tempDir, "foo", "to-be-renamed"))
 	t.touchFile(path.Join(tempDir, "foo_file"))
 	t.touchFile(path.Join(tempDir, "foo", "abc"))
 

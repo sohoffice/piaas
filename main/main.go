@@ -4,11 +4,13 @@ import (
 	"flag"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/sohoffice/piaas"
+	"github.com/sohoffice/piaas/app"
 	"github.com/sohoffice/piaas/sync"
 	"github.com/urfave/cli"
 	"io/ioutil"
 	"os"
-	"os/signal"
+	"time"
 )
 
 var version string
@@ -23,30 +25,33 @@ func main() {
 	// default log level is INFO
 	log.SetLevel(log.InfoLevel)
 
-	app := cli.NewApp()
-	app.Name = "Piaas, tools to develop using multiple machines as if using Personal IAAS."
-	app.HelpName = "piaas"
-	app.Authors = []cli.Author{
+	cliApp := cli.NewApp()
+	cliApp.Name = "Piaas"
+	cliApp.Description = "Increase productivity of developer by leveraging computing power of multiple machines."
+	cliApp.HelpName = "piaas"
+	cliApp.Authors = []cli.Author{
 		{
 			Name:  "Douglas Liu",
 			Email: "douglas@sohoffice.com",
 		},
 	}
-	app.Version = version
+	cliApp.Version = version
 
-	app.Commands = []cli.Command{
+	cliApp.Commands = []cli.Command{
 		sync.Prepare(),
+		app.Prepare(),
 	}
 
-	exitCh := make(chan os.Signal, 1)
-	signal.Notify(exitCh, os.Interrupt, os.Kill)
-	go func() {
-		s := <-exitCh
-		fmt.Fprintf(os.Stdout, "Signal received: %s", s)
-		os.Exit(0)
-	}()
+	piaas.SubscribeExitSignal(func(sig os.Signal) {
+		// Upon receiving the signal, wait for 500 millis before exit.
+		time.AfterFunc(time.Millisecond*500, func() {
+			log.Debugln("Piaas terminating ...")
+			os.Exit(0)
+		})
+	}, false)
+	piaas.HandleExitSignal()
 
-	err := app.Run(os.Args)
+	err := cliApp.Run(os.Args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "\nError: %s\n", err)
 		os.Exit(1)

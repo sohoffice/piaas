@@ -6,6 +6,7 @@ import (
 )
 
 // check and log in error level
+// This does not stop the program nor does it fail the test case
 func CheckError(tag string, err error) {
 	if err != nil {
 		log.Errorf("%s error: %s", tag, err)
