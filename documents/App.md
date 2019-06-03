@@ -11,6 +11,7 @@ running the command directly for the following reasons.
   - Start with `piaas app run [app name]`.
   - Tail the log with `piaas app log [app name]`.
   - Stop with `piaas app stop [app name]`.
+  - Check status with `piaas app status` or simply `piaas app`.
 
 ## Config
 
