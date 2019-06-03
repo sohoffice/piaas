@@ -55,7 +55,7 @@ build-windows:
 	@echo "        Built windows-amd64"
 
 # Create a new release for publish
-release: clean tests$(TESTMODE) build-all
+release: clean test$(TESTMODE) build-all
 	cd dist/darwin_amd64 && zip piaas-darwin-amd64-$(VERSION).zip * && cd ..
 	cd dist/linux_amd64 && zip piaas-linux-amd64-$(VERSION).zip * && cd ..
 	cd dist/windows_amd64 && zip piaas-windows-amd64-$(VERSION).zip * && cd ..
