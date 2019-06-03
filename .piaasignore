@@ -1,6 +1,8 @@
 /.idea
 .git
 .vagrant
+node_modules
+package-lock.json
 /.piaas.d
 *___jb_tmp___
 *___jb_old___
