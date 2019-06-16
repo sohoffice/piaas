@@ -1,7 +1,7 @@
 # The Personal IAAS 
 
-Piaas is a set of tools that help you develop using multiple machines.
-You can use your favorite IDE locally, while compile and serve on a more
+Piaas is a set of tools that help you **develop using multiple machines**.
+You can use your favorite IDE on your Macbook, while compile and serve on a more
 powerful desktop PC remotely.
 
 We all work on laptop today. However, compiling and serving on laptop
@@ -10,8 +10,8 @@ drained, cycle count increased. More than ever, peace of mind you lost.
 
 Piaas help your workspace in sync with a remote machine, given it a 
 more powerful desktop PC, a high end iMac or a shared server. Develop with
-your favorite IDE, while compiling and serving from the desktop. Your 
-laptop is relaxed to do the thing that absolutely required it to do.
+your favorite IDE on your laptop, while compiling and serving from the desktop. Your 
+laptop is therefore relaxed to do the thing that absolutely required it to do.
 **Great team work**, isn't it ? 
 
 ## Installation
@@ -28,7 +28,7 @@ Extract and place the binary in your path and you're done.
 
 The application support Mac OS, but was only tested on Mojave.
 
-Linux should be fine, but untested.
+Linux should be fine, but wasn't tested in the real world.
 
 On windows platform, WSL (windows subsystem linux) is required. At the
 moment **Windows 10** is the only version with WSL so is the only version
