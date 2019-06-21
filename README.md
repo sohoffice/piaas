@@ -9,10 +9,10 @@ is crazy. The fan keeps working and creating quite a noise. Your battery
 drained, cycle count increased. More than ever, peace of mind you lost.
 
 Piaas help your workspace in sync with a remote machine, given it a 
-more powerful desktop PC, a high end iMac or a shared server. Develop with
-your favorite IDE on your laptop, while compiling and serving from the desktop. Your 
-laptop is therefore relaxed to do the thing that absolutely required it to do.
-**Great team work**, isn't it ? 
+more powerful desktop PC, a high end iMac or a shared server. Developing with
+your favorite IDE on your laptop, running your api server and database server
+from the desktop PC. Your laptop is therefore relaxed to do the thing that 
+absolutely required it to do. **Great team work**, isn't it ? 
 
 ## Installation
 
